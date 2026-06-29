@@ -1,19 +1,33 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from database.connect import engine, Base
-from routers import user
+from api import user
+from utils.exception import register_exception
+from utils.logger import log
 
-# 自动创建表（本地已有表不会重复生成）
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="EduAgent学习助手后端")
+app = FastAPI(title="EduAgent后端")
 
-# 注册路由
+# 跨域
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 全局异常
+register_exception(app)
+
+# 路由
 app.include_router(user.router)
 
 @app.get("/")
 def root():
-    return {"msg":"后端服务启动成功，访问 /docs 查看接口文档"}
+    return {"msg": "服务正常，访问 /docs"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
