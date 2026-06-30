@@ -72,27 +72,6 @@
         </el-card>
       </el-col>
     </el-row>
-
-    <el-row style="margin-top: 20px">
-      <el-col :span="24">
-        <el-card header="快速访问">
-          <div class="quick-access">
-            <el-button type="primary" @click="$router.push('/chat')" size="large">
-              AI智能对话
-            </el-button>
-            <el-button type="success" @click="$router.push('/resources')" size="large">
-              学习资源
-            </el-button>
-            <el-button type="warning" @click="$router.push('/profile')" size="large">
-              学习画像
-            </el-button>
-            <el-button type="info" @click="$router.push('/path')" size="large">
-              学习路径
-            </el-button>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
   </div>
 </template>
 
@@ -156,11 +135,5 @@ const recentLearning = [
   font-weight: bold;
   color: #4a5568;
   min-width: 80px;
-}
-
-.quick-access {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
 }
 </style>

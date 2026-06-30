@@ -96,9 +96,33 @@ const handleLogin = async () => {
       try {
         // 演示模式：直接登录，不调用真实API
         const mockUsers = {
-          student: { id: 1, username: 'student', role: 'student', avatar: '' },
-          teacher: { id: 2, username: 'teacher', role: 'teacher', avatar: '' },
-          admin: { id: 3, username: 'admin', role: 'admin', avatar: '' },
+          student: {
+            id: 1,
+            username: 'student',
+            role: 'student',
+            avatar: '',
+            email: 'student@example.com',
+            phone: '13800000000',
+            bio: '正在探索AI学习之路。',
+          },
+          teacher: {
+            id: 2,
+            username: 'teacher',
+            role: 'teacher',
+            avatar: '',
+            email: 'teacher@example.com',
+            phone: '13900000000',
+            bio: '专注于课程设计与教学支持。',
+          },
+          admin: {
+            id: 3,
+            username: 'admin',
+            role: 'admin',
+            avatar: '',
+            email: 'admin@example.com',
+            phone: '13700000000',
+            bio: '管理平台内容与用户权限。',
+          },
         }
 
         const user = mockUsers[loginForm.username]

@@ -1,161 +1,249 @@
 <template>
   <div class="profile-container">
-    <el-card header="学习画像分析">
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <div class="profile-section">
-            <h3>知识基础</h3>
-            <el-progress
-              :percentage="learningProfile.knowledgeBase"
-              :stroke-width="20"
-              :color="knowledgeColor"
-              status="success"
-            />
-            <p class="progress-text">{{ learningProfile.knowledgeBase }}分</p>
+    <el-row :gutter="20">
+      <el-col :xs="24" :lg="8">
+        <el-card class="user-card">
+          <div class="card-title-row">
+            <span class="card-title">用户信息</span>
+            <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
           </div>
-        </el-col>
 
-        <el-col :span="8">
-          <div class="profile-section">
-            <h3>认知风格</h3>
-            <el-tag type="info" size="large">{{ learningProfile.cognitiveStyle }}</el-tag>
-          </div>
-        </el-col>
-
-        <el-col :span="8">
-          <div class="profile-section">
-            <h3>学习目标</h3>
-            <el-tag type="warning" size="large">{{ learningProfile.learningGoals }}</el-tag>
-          </div>
-        </el-col>
-      </el-row>
-
-      <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="12">
-          <div class="profile-section">
-            <h3>易错点偏好</h3>
-            <div class="error-preferences">
-              <el-tag
-                v-for="(item, index) in learningProfile.errorPreferences"
-                :key="index"
-                type="danger"
-                style="margin: 5px"
-              >
-                {{ item }}
-              </el-tag>
+          <div class="avatar-section">
+            <el-avatar :size="96" :src="userAvatar" class="user-avatar">
+              {{ userInitials }}
+            </el-avatar>
+            <div class="user-summary">
+              <h2>{{ userInfo.username }}</h2>
+              <div class="user-badges">
+                <el-tag :type="roleTagType">{{ roleText }}</el-tag>
+                <el-tag type="success">{{
+                  userInfo.role === 'admin' ? '管理员' : '学习者'
+                }}</el-tag>
+              </div>
+              <p class="user-bio">{{ userInfo.bio || '这个人还没有填写简介。' }}</p>
             </div>
           </div>
-        </el-col>
 
-        <el-col :span="12">
-          <div class="profile-section">
-            <h3>学习风格偏好</h3>
-            <el-tag type="success" size="large">{{
-              learningProfile.preferredLearningStyle
-            }}</el-tag>
+          <div class="contact-list">
+            <div class="contact-item">
+              <span>邮箱</span>
+              <strong>{{ userInfo.email || '未填写' }}</strong>
+            </div>
+            <div class="contact-item">
+              <span>手机号</span>
+              <strong>{{ userInfo.phone || '未填写' }}</strong>
+            </div>
+            <div class="contact-item">
+              <span>账号</span>
+              <strong>{{ userInfo.username }}</strong>
+            </div>
           </div>
-        </el-col>
-      </el-row>
+        </el-card>
+      </el-col>
 
-      <el-row style="margin-top: 20px">
-        <el-col :span="24">
-          <div class="profile-section">
-            <h3>学习建议</h3>
-            <el-alert title="个性化学习建议" type="info" :closable="false" show-icon>
-              <ul>
-                <li>
-                  建议多进行实践练习，特别是{{
-                    learningProfile.errorPreferences.join('、')
-                  }}相关的内容
-                </li>
-                <li>适合{{ learningProfile.preferredLearningStyle }}的学习方式</li>
-                <li>
-                  当前知识基础{{
-                    learningProfile.knowledgeBase >= 70 ? '较好' : '一般'
-                  }}，建议循序渐进
-                </li>
-              </ul>
-            </el-alert>
-          </div>
-        </el-col>
-      </el-row>
-    </el-card>
-
-    <el-card header="画像更新" style="margin-top: 20px">
-      <el-form :model="editForm" label-width="120px">
-        <el-form-item label="认知风格">
-          <el-select v-model="editForm.cognitiveStyle" placeholder="请选择认知风格">
-            <el-option label="视觉型" value="视觉型" />
-            <el-option label="听觉型" value="听觉型" />
-            <el-option label="动觉型" value="动觉型" />
-            <el-option label="阅读型" value="阅读型" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="学习目标">
-          <el-input v-model="editForm.learningGoals" placeholder="请输入学习目标" />
-        </el-form-item>
-
-        <el-form-item label="学习风格偏好">
-          <el-select v-model="editForm.preferredLearningStyle" placeholder="请选择学习风格">
-            <el-option label="案例学习" value="案例学习" />
-            <el-option label="理论学习" value="理论学习" />
-            <el-option label="实践操作" value="实践操作" />
-            <el-option label="小组讨论" value="小组讨论" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary" @click="updateProfile">更新画像</el-button>
-          <el-button @click="resetForm">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+      <el-col :xs="24" :lg="16">
+        <el-card header="个人资料" class="edit-card">
+          <el-form :model="profileForm" label-width="90px">
+            <el-form-item label="昵称">
+              <el-input v-model="profileForm.username" placeholder="请输入昵称" />
+            </el-form-item>
+            <el-form-item label="邮箱">
+              <el-input v-model="profileForm.email" placeholder="请输入邮箱" />
+            </el-form-item>
+            <el-form-item label="手机号">
+              <el-input v-model="profileForm.phone" placeholder="请输入手机号" />
+            </el-form-item>
+            <el-form-item label="简介">
+              <el-input
+                v-model="profileForm.bio"
+                type="textarea"
+                :rows="3"
+                placeholder="介绍一下自己"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="saveUserInfo">保存资料</el-button>
+              <el-button @click="resetUserInfo">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 
+const router = useRouter()
 const userStore = useUserStore()
 
-const learningProfile = computed(() => userStore.currentProfile)
+const defaultUserInfo = {
+  username: '用户',
+  role: 'student',
+  avatar: '',
+  email: '',
+  phone: '',
+  bio: '这个人还没有填写简介。',
+}
 
-const editForm = reactive({
-  cognitiveStyle: learningProfile.value.cognitiveStyle,
-  learningGoals: learningProfile.value.learningGoals,
-  preferredLearningStyle: learningProfile.value.preferredLearningStyle,
+const userInfo = computed(() => userStore.userInfo || defaultUserInfo)
+const roleText = computed(() => {
+  const role = userInfo.value.role || 'student'
+  const map = { admin: '管理员', teacher: '教师', student: '学生' }
+  return map[role] || '学生'
+})
+const roleTagType = computed(() => {
+  const role = userInfo.value.role || 'student'
+  if (role === 'admin') return 'danger'
+  if (role === 'teacher') return 'warning'
+  return 'success'
+})
+const userInitials = computed(() => {
+  const name = userInfo.value.username || '用户'
+  return name.slice(0, 2).toUpperCase()
+})
+const userAvatar = computed(() => userInfo.value.avatar || '')
+
+const profileForm = reactive({
+  username: '',
+  email: '',
+  phone: '',
+  bio: '',
 })
 
-const knowledgeColor = computed(() => {
-  const score = learningProfile.value.knowledgeBase
-  if (score >= 80) return '#67c23a'
-  if (score >= 60) return '#e6a23c'
-  return '#f56c6c'
-})
+const syncProfileForm = () => {
+  profileForm.username = userInfo.value.username || '用户'
+  profileForm.email = userInfo.value.email || ''
+  profileForm.phone = userInfo.value.phone || ''
+  profileForm.bio = userInfo.value.bio || ''
+}
 
-const updateProfile = () => {
-  userStore.setLearningProfile({
-    ...learningProfile.value,
-    cognitiveStyle: editForm.cognitiveStyle,
-    learningGoals: editForm.learningGoals,
-    preferredLearningStyle: editForm.preferredLearningStyle,
+const saveUserInfo = () => {
+  userStore.setUserInfo({
+    ...(userStore.userInfo || defaultUserInfo),
+    username: profileForm.username || '用户',
+    email: profileForm.email,
+    phone: profileForm.phone,
+    bio: profileForm.bio,
   })
-  ElMessage.success('学习画像更新成功！')
+  ElMessage.success('个人资料已保存')
 }
 
-const resetForm = () => {
-  editForm.cognitiveStyle = learningProfile.value.cognitiveStyle
-  editForm.learningGoals = learningProfile.value.learningGoals
-  editForm.preferredLearningStyle = learningProfile.value.preferredLearningStyle
+const handleLogout = () => {
+  userStore.logout()
+  router.push('/login')
+  ElMessage.success('已退出登录')
 }
+
+const resetUserInfo = () => {
+  syncProfileForm()
+}
+
+onMounted(() => {
+  syncProfileForm()
+})
+
+watch(
+  userInfo,
+  () => {
+    syncProfileForm()
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>
 .profile-container {
   padding: 20px;
+}
+
+.user-card,
+.edit-card,
+.section-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1a365d;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #409eff, #66b1ff);
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.user-summary h2 {
+  margin: 0 0 8px 0;
+  color: #1a365d;
+}
+
+.user-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.user-bio {
+  margin: 0;
+  color: #64748b;
+}
+
+.contact-list {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+}
+
+.contact-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  color: #334155;
+}
+
+.stat-card {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.stat-title {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  color: #1a365d;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.stat-footer {
+  color: #94a3b8;
+  font-size: 0.85rem;
 }
 
 .profile-section {

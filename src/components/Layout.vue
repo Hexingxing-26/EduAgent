@@ -25,7 +25,7 @@
 
         <el-menu-item index="profile" @click="navigateTo('/profile')">
           <el-icon><User /></el-icon>
-          <span v-if="!isCollapse">学习画像</span>
+          <span v-if="!isCollapse">个人中心</span>
         </el-menu-item>
 
         <el-menu-item index="chat" @click="navigateTo('/chat')">
@@ -68,16 +68,14 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="32" />
+              <el-avatar :size="32" :src="userAvatar" />
               <span v-if="!isCollapse" class="username">{{ username }}</span>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                 <el-dropdown-item command="settings">设置</el-dropdown-item>
-                <el-dropdown-item command="logout" divided
-                  >退出登录</el-dropdown-item
-                >
+                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -96,10 +94,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { useUserStore } from "@/store";
-import { ElMessage } from "element-plus";
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/stores'
+import { ElMessage } from 'element-plus'
 import {
   House,
   User,
@@ -110,76 +108,78 @@ import {
   UserFilled,
   Fold,
   Expand,
-} from "@element-plus/icons-vue";
+} from '@element-plus/icons-vue'
 
-const router = useRouter();
-const route = useRoute();
-const userStore = useUserStore();
+const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
 
-const isCollapse = ref(false);
-const activeMenu = ref("dashboard");
+const isCollapse = ref(false)
+const activeMenu = ref('dashboard')
 
-const username = computed(() => userStore.userInfo?.username || "用户");
-const isAdmin = computed(() => userStore.isAdmin);
+const username = computed(() => userStore.userInfo?.username || '用户')
+const userAvatar = computed(() => userStore.userInfo?.avatar || '')
+const isAdmin = computed(() => userStore.isAdmin)
 const pageTitle = computed(() => {
   const titles = {
-    "/dashboard": "系统首页",
-    "/profile": "学习画像分析",
-    "/chat": "AI智能对话",
-    "/path": "个性化学习路径",
-    "/resources": "学习资源中心",
-    "/admin": "管理后台",
-  };
-  return titles[route.path] || "智学系统";
-});
+    '/dashboard': '系统首页',
+    '/profile': '个人中心',
+    '/user-profile': '用户画像',
+    '/chat': 'AI智能对话',
+    '/path': '个性化学习路径',
+    '/resources': '学习资源中心',
+    '/admin': '管理后台',
+  }
+  return titles[route.path] || '智学系统'
+})
 
 const toggleSidebar = () => {
-  isCollapse.value = !isCollapse.value;
-};
+  isCollapse.value = !isCollapse.value
+}
 
 const navigateTo = (path) => {
-  router.push(path);
-};
+  router.push(path)
+}
 
 const handleCommand = (command) => {
   switch (command) {
-    case "profile":
-      router.push("/profile");
-      break;
-    case "settings":
-      ElMessage.info("设置功能开发中");
-      break;
-    case "logout":
-      userStore.logout();
-      router.push("/login");
-      ElMessage.success("已退出登录");
-      break;
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'settings':
+      ElMessage.info('设置功能开发中')
+      break
+    case 'logout':
+      userStore.logout()
+      router.push('/login')
+      ElMessage.success('已退出登录')
+      break
   }
-};
+}
 
 const updateActiveMenu = () => {
-  const path = route.path;
-  if (path.includes("/dashboard")) activeMenu.value = "dashboard";
-  else if (path.includes("/profile")) activeMenu.value = "profile";
-  else if (path.includes("/chat")) activeMenu.value = "chat";
-  else if (path.includes("/path")) activeMenu.value = "path";
-  else if (path.includes("/resources")) activeMenu.value = "resources";
-  else if (path.includes("/admin")) activeMenu.value = "admin";
-};
+  const path = route.path
+  if (path.includes('/dashboard')) activeMenu.value = 'dashboard'
+  else if (path.includes('/profile')) activeMenu.value = 'profile'
+  else if (path.includes('/chat')) activeMenu.value = 'chat'
+  else if (path.includes('/path')) activeMenu.value = 'path'
+  else if (path.includes('/resources')) activeMenu.value = 'resources'
+  else if (path.includes('/admin')) activeMenu.value = 'admin'
+}
 
 onMounted(() => {
   if (!userStore.isAuthenticated) {
-    router.push("/login");
-    return;
+    router.push('/login')
+    return
   }
 
-  updateActiveMenu();
-});
+  updateActiveMenu()
+})
 
 // 监听路由变化
 router.afterEach(() => {
-  updateActiveMenu();
-});
+  updateActiveMenu()
+})
 </script>
 
 <style scoped>

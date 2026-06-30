@@ -1,86 +1,120 @@
-import axios from "axios";
+import axios from 'axios'
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
-});
+})
 
-// 请求拦截器
+// 请求拦截器（自动塞Token）
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
+    return config
   },
   (error) => {
-    return Promise.reject(error);
+    return Promise.reject(error)
   },
-);
+)
 
-// 响应拦截器
+// 响应拦截器（处理401和业务错误码）
 api.interceptors.response.use(
   (response) => {
-    return response;
+    // 如果后端返回的 code !== 0，说明业务失败
+    if (response.data.code !== undefined && response.data.code !== 0) {
+      console.error('业务错误:', response.data.msg)
+      return Promise.reject(new Error(response.data.msg || '请求失败'))
+    }
+    return response
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      localStorage.removeItem('token')
+      window.location.href = '/login'
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   },
-);
+)
 
-// 登录
-export const login = (credentials) => {
-  return api.post("/auth/login", credentials);
-};
+// ====== 以下是实际调用的接口 ======
 
-// 获取用户信息
+// 1. 登录接口：直接返回假 Token，不发网络请求
+export const login = (username, password) => {
+  console.log('[单机模式] 登录账号:', username, '密码:', password)
+
+  // 模拟网络延迟，让你看到 Loading 效果
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: {
+          token: 'fake-token-123456', // 随便编一个Token
+        },
+      })
+    }, 500)
+  })
+}
+
+// 2. 获取用户信息：直接返回你想要的任何假数据
 export const getUserInfo = () => {
-  return api.get("/users/me");
-};
+  console.log('[单机模式] 获取用户信息')
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: {
+          id: 1,
+          username: '前端测试员', // 想叫什么就叫什么
+          role: 'admin', // 管理员权限
+          avatar: 'https://picsum.photos/200', // 随机头像
+          email: 'test@example.com',
+        },
+      })
+    }, 300)
+  })
+}
+
+// ====== 以下接口暂时保留，等C的其他模块文件出来后再改 ======
+// （D的AI接口、资源接口等，目前路径不确定，先留着占位）
 
 // 获取学习画像
 export const getLearningProfile = (userId) => {
-  return api.get(`/profiles/${userId}`);
-};
+  return api.get(`/profiles/${userId}`)
+}
 
 // 更新学习画像
 export const updateLearningProfile = (userId, profile) => {
-  return api.put(`/profiles/${userId}`, profile);
-};
+  return api.put(`/profiles/${userId}`, profile)
+}
 
 // 发送AI对话消息
 export const sendAIChatMessage = (message, context = {}) => {
-  return api.post("/ai/chat", { message, context });
-};
+  return api.post('/ai/chat', { message, context })
+}
 
 // 获取学习资源
 export const getLearningResources = (filters = {}) => {
-  return api.get("/resources", { params: filters });
-};
+  return api.get('/resources', { params: filters })
+}
 
 // 生成学习路径
 export const generateLearningPath = (profile) => {
-  return api.post("/path/generate", profile);
-};
+  return api.post('/path/generate', profile)
+}
 
 // 管理后台 - 获取用户列表
 export const getUsers = () => {
-  return api.get("/admin/users");
-};
+  return api.get('/admin/users')
+}
 
 // 管理后台 - 获取资源统计
 export const getResourceStats = () => {
-  return api.get("/admin/stats/resources");
-};
+  return api.get('/admin/stats/resources')
+}
 
-export default api;
+export default api
