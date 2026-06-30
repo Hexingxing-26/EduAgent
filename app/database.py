@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Text, JSON, DateTime, Integer, Boolean
+from sqlalchemy import create_engine, Column, String, Text, DateTime, Integer, Index, Float, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -7,48 +7,64 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ai_agent.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./edu_agent.db")
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-class UserProfile(Base):
-    __tablename__ = "user_profiles"
-    
-    user_id = Column(String(50), primary_key=True, index=True)
-    knowledge_base = Column(String(50), nullable=False)
-    cognitive_style = Column(String(50), nullable=False)
-    weak_points = Column(Text, nullable=True)
-    interest = Column(String(100), nullable=True)
-    learning_pace = Column(String(20), nullable=False)
-    emotional_state = Column(String(20), nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+class EduUser(Base):
+    __tablename__ = "edu_user"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(100), nullable=False)
+    nickname = Column(String(50))
+    major = Column(String(50))
+    create_time = Column(DateTime, default=datetime.now)
+
+
+class EduChat(Base):
+    __tablename__ = "edu_chat"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer)
+    session_id = Column(String(100))
+    content = Column(Text)
+    role = Column(String(20))
+    create_time = Column(DateTime, default=datetime.now)
+
+
+class EduProfile(Base):
+    __tablename__ = "edu_profile"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, unique=True)
+    weak_points = Column(Text)
+    learning_json = Column(Text)
+    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class EduResource(Base):
+    __tablename__ = "edu_resource"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer)
+    resource_type = Column(String(30))
+    content = Column(Text)
+    progress = Column(Integer, default=0)
+    create_time = Column(DateTime, default=datetime.now)
 
 
 class LearningRecord(Base):
     __tablename__ = "learning_records"
-    
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(String(50), primary_key=True)
     user_id = Column(String(50), nullable=False, index=True)
-    topic = Column(String(200), nullable=False)
-    profile = Column(JSON, nullable=True)
-    generated_resource = Column(Text, nullable=True)
-    learning_path = Column(JSON, nullable=True)
-    is_approved = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now)
-
-
-class KnowledgeBase(Base):
-    __tablename__ = "knowledge_base"
-    
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    content = Column(Text, nullable=False)
-    keywords = Column(String(200), nullable=True)
-    category = Column(String(50), nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
+    course = Column(String(100))
+    chapter = Column(String(200))
+    score = Column(Float)
+    correct_rate = Column(Float)
+    problems_done = Column(Integer)
+    duration_minutes = Column(Integer)
+    date = Column(Date)
+    time_slot = Column(String(50))
 
 
 def init_db():
