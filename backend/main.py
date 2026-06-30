@@ -1,3 +1,5 @@
+from api.portrait_router import router as portrait_router
+from api.conversation_router import router as conv_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.connect import engine, Base
@@ -7,7 +9,7 @@ from utils.logger import log
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="EduAgent后端")
+app = FastAPI(title="教育助手后端")
 
 # 跨域
 app.add_middleware(
@@ -23,6 +25,9 @@ register_exception(app)
 
 # 路由
 app.include_router(user.router)
+app.include_router(conv_router)
+# 注册用户画像模块接口
+app.include_router(portrait_router)
 
 @app.get("/")
 def root():
