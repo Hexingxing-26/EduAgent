@@ -1,6 +1,9 @@
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const LOGIN_PATH = import.meta.env.VITE_LOGIN_PATH || '/user/login'
+const USER_INFO_PATH = import.meta.env.VITE_USER_INFO_PATH || '/user/info'
+const USE_MOCK_LOGIN = import.meta.env.VITE_USE_MOCK_LOGIN !== 'false'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -44,39 +47,49 @@ api.interceptors.response.use(
 
 // ====== 以下是实际调用的接口 ======
 
-// 1. 登录接口：直接返回假 Token，不发网络请求
+// 1. 登录接口：默认请求后端 /auth/login
 export const login = (username, password) => {
-  console.log('[单机模式] 登录账号:', username, '密码:', password)
+  if (USE_MOCK_LOGIN) {
+    console.log('[单机模式] 登录账号:', username, '密码:', password)
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            token: 'fake-token-123456',
+          },
+        })
+      }, 500)
+    })
+  }
 
-  // 模拟网络延迟，让你看到 Loading 效果
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        data: {
-          token: 'fake-token-123456', // 随便编一个Token
-        },
-      })
-    }, 500)
+  return api.post(LOGIN_PATH, null, {
+    params: {
+      username,
+      password,
+    },
   })
 }
 
-// 2. 获取用户信息：直接返回你想要的任何假数据
+// 2. 获取当前用户信息：默认请求后端 /auth/me
 export const getUserInfo = () => {
-  console.log('[单机模式] 获取用户信息')
+  if (USE_MOCK_LOGIN) {
+    console.log('[单机模式] 获取用户信息')
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            id: 1,
+            username: '前端测试员',
+            role: 'admin',
+            avatar: 'https://picsum.photos/200',
+            email: 'test@example.com',
+          },
+        })
+      }, 300)
+    })
+  }
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        data: {
-          id: 1,
-          username: '前端测试员', // 想叫什么就叫什么
-          role: 'admin', // 管理员权限
-          avatar: 'https://picsum.photos/200', // 随机头像
-          email: 'test@example.com',
-        },
-      })
-    }, 300)
-  })
+  return api.get(USER_INFO_PATH)
 }
 
 // ====== 以下接口暂时保留，等C的其他模块文件出来后再改 ======

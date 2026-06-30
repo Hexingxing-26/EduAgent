@@ -94,63 +94,18 @@ const handleLogin = async () => {
       loading.value = true
 
       try {
-        // 演示模式：直接登录，不调用真实API
-        const mockUsers = {
-          student: {
-            id: 1,
-            username: 'student',
-            role: 'student',
-            avatar: '',
-            email: 'student@example.com',
-            phone: '13800000000',
-            bio: '正在探索AI学习之路。',
-          },
-          teacher: {
-            id: 2,
-            username: 'teacher',
-            role: 'teacher',
-            avatar: '',
-            email: 'teacher@example.com',
-            phone: '13900000000',
-            bio: '专注于课程设计与教学支持。',
-          },
-          admin: {
-            id: 3,
-            username: 'admin',
-            role: 'admin',
-            avatar: '',
-            email: 'admin@example.com',
-            phone: '13700000000',
-            bio: '管理平台内容与用户权限。',
-          },
-        }
-
-        const user = mockUsers[loginForm.username]
-
-        if (user && loginForm.password === '123456') {
-          // 设置用户信息
-          userStore.setUserInfo(user)
-          userStore.setToken('mock-token-' + Date.now())
-
-          // 设置默认学习画像
-          userStore.setLearningProfile({
-            knowledgeBase: 60,
-            cognitiveStyle: '视觉型',
-            errorPreferences: ['概念理解', '计算错误'],
-            learningGoals: '掌握人工智能基础知识',
-            preferredLearningStyle: '案例学习',
-            currentProgress: 30,
-          })
-
-          ElMessage.success('登录成功！')
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 1000)
-        } else {
-          ElMessage.error('用户名或密码错误')
-        }
+        await userStore.login(loginForm)
+        userStore.setLearningProfile({
+          knowledgeBase: 60,
+          cognitiveStyle: '视觉型',
+          errorPreferences: ['概念理解', '计算错误'],
+          learningGoals: '掌握人工智能基础知识',
+          preferredLearningStyle: '案例学习',
+          currentProgress: 30,
+        })
+        ElMessage.success('登录成功！')
       } catch (error) {
-        ElMessage.error('登录失败，请重试')
+        ElMessage.error(error?.message || '登录失败，请检查账号密码或后端接口')
         console.error(error)
       } finally {
         loading.value = false

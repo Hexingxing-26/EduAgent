@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { login, getUserInfo } from '@/api/api' // ← 新增
-import router from '@/router' // ← 新增
+import { login, getUserInfo } from '@/api/api'
+import router from '@/router'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -49,11 +49,17 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('learningPath', JSON.stringify(path))
     },
 
-    // ===== 🆕 新增：登录方法 =====
+    // ===== 登录方法 =====
     async login(loginForm) {
       try {
         const res = await login(loginForm.username, loginForm.password)
-        const token = res.data.token
+        const payload = res?.data || {}
+        const token = payload.token || payload.accessToken || payload.access_token || payload.data?.token || payload.data?.accessToken || payload.data?.data?.token
+
+        if (!token) {
+          throw new Error('登录接口未返回 token')
+        }
+
         this.setToken(token)
         await this.fetchUserInfo()
         router.push('/dashboard')
@@ -63,12 +69,14 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    // ===== 🆕 新增：获取用户信息方法 =====
+    // ===== 获取用户信息方法 =====
     async fetchUserInfo() {
       if (!this.token) return
       try {
         const res = await getUserInfo()
-        this.setUserInfo(res.data)
+        const payload = res?.data || {}
+        const userInfo = payload.user || payload.data?.user || payload.data?.data?.user || payload.data || payload.data?.data || payload
+        this.setUserInfo(userInfo)
         return Promise.resolve(res)
       } catch (error) {
         return Promise.reject(error)
