@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Numeric, Date, JSON, func
 from sqlalchemy.sql import func
 from .connect import Base
 
@@ -22,14 +22,42 @@ class EduChat(Base):
     role = Column(String(20))
     create_time = Column(DateTime, default=func.now())
 
-# 用户学习画像表
-class EduProfile(Base):
-    __tablename__ = "edu_profile"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, unique=True)
-    weak_points = Column(Text)
-    learning_json = Column(Text)
-    update_time = Column(DateTime, default=func.now(), onupdate=func.now())
+
+# 学生画像表 students（替代原edu_profile）
+class Students(Base):
+    __tablename__ = "students"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    name = Column(String(50), nullable=False, comment="姓名")
+    age = Column(Integer, comment="年龄")
+    major = Column(String(100), comment="专业")
+    course = Column(String(100), comment="课程")
+    study_goal = Column(String(255), comment="学习目标")
+    knowledge_level = Column(String(50), comment="知识基础")
+    learning_preference = Column(String(50), comment="学习偏好")
+    weak_knowledge = Column(String(255), comment="薄弱知识")
+    study_time = Column(String(50), comment="学习时间")
+    raw_json = Column(JSON, comment="原始JSON数据（可选）")
+    created_at = Column(DateTime, default=func.now(), comment="创建时间")
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), comment="更新时间")
+
+
+# 学习记录表 learning_records
+class LearningRecords(Base):
+    __tablename__ = "learning_records"
+
+    id = Column(String(64), primary_key=True, comment="记录id，如 RU0001_000")
+    user_id = Column(String(50), comment="用户 id，如 U0001")
+    course = Column(String(200), comment="课程")
+    chapter = Column(String(200), comment="章节")
+    score = Column(Integer, comment="得分")
+    correct_rate = Column(Numeric(5, 4), comment="正确率（0-1）")
+    problems_done = Column(Integer, comment="完成题目数")
+    duration_minutes = Column(Integer, comment="持续分钟数")
+    study_date = Column(Date, comment="学习日期")
+    time_slot = Column(String(20), comment="时间段，如 10:00-12:00")
+    raw_json = Column(JSON, comment="原始 JSON 数据（可选）")
+    created_at = Column(DateTime, default=func.now(), comment="创建时间")
 
 # 资源存储表
 class EduResource(Base):

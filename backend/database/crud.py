@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from .models import EduUser, EduChat, EduProfile, EduResource
+from .models import EduUser, EduChat, Students, EduResource, LearningRecords
 
 # 根据用户名查询用户
 def get_user_by_username(db: Session, username: str):
