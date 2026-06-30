@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Numeric, Date, J
 from sqlalchemy.sql import func
 from .connect import Base
 
+
 # 用户表
 class EduUser(Base):
     __tablename__ = "edu_user"

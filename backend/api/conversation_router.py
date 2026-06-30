@@ -15,7 +15,7 @@ from database.crud_conversation import (
     delete_user_all_conversation
 )
 # 数据模型
-from schemas.conversation_schema import ConversationCreate, ConversationItem, SessionListResp
+from schemas.conversation_schema import ConversationCreate, ConversationItem,SessionListResp
 
 router = APIRouter(prefix="/conversation", tags=["对话会话模块"])
 
