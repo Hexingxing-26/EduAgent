@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能体模块 - API接口文档</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --code-bg: #020617;
+            --code-border: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav a:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav a.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+            max-width: 900px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 1rem;
+        }
+
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .subsection-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 24px 0 16px;
+            color: var(--text-primary);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .method-badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .method-get {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .method-post {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+        }
+
+        .endpoint {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            font-size: 0.9rem;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 8px;
+            border: 1px solid var(--code-border);
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--code-border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .code-copy {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .code-copy:hover {
+            background: var(--bg-hover);
+        }
+
+        .code-content {
+            padding: 16px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: var(--text-primary);
+        }
+
+        .code-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-content code {
+            display: block;
+        }
+
+        .json-key {
+            color: #f97316;
+        }
+
+        .json-string {
+            color: #22c55e;
+        }
+
+        .json-number {
+            color: #3b82f6;
+        }
+
+        .json-boolean {
+            color: #8b5cf6;
+        }
+
+        .response-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            margin-left: 8px;
+        }
+
+        .flowchart {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 16px 0;
+            border: 1px solid var(--code-border);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            line-height: 2;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .tip-box {
+            background: rgba(99, 102, 241, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+        }
+
+        .tip-box p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .env-variable {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #f97316;
+        }
+
+        .keyword {
+            color: #8b5cf6;
+        }
+
+        .string {
+            color: #22c55e;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>AI智能体 API</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#overview">服务概述</a>
+            <a href="#endpoints">接口列表</a>
+            <a href="#health">健康检查</a>
+            <a href="#chat-stream">流式对话</a>
+            <a href="#frontend">前端接入</a>
+            <a href="#backend">后端调用</a>
+            <a href="#workflow">工作流流程</a>
+            <a href="#errors">错误处理</a>
+            <a href="#env">环境配置</a>
+            <a href="#dependencies">依赖清单</a>
+            <a href="#startup">启动方式</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1 class="page-title">AI智能体模块</h1>
+            <p class="page-subtitle">API接口文档 - FastAPI + LangGraph</p>
+        </header>
+
+        <section id="overview" class="section">
+            <h2 class="section-title">服务概述</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>项目</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>服务名称</td>
+                                <td>AI_Agent_System</td>
+                            </tr>
+                            <tr>
+                                <td>技术框架</td>
+                                <td>FastAPI + LangGraph</td>
+                            </tr>
+                            <tr>
+                                <td>默认端口</td>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">8000</code></td>
+                            </tr>
+                            <tr>
+                                <td>交互式文档</td>
+                                <td><a href="http://localhost:8000/docs" target="_blank" style="color: var(--primary);">http://localhost:8000/docs</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="endpoints" class="section">
+            <h2 class="section-title">接口列表</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>路径</th>
+                                <th>方法</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">/</code></td>
+                                <td><span class="method-badge method-get">GET</span></td>
+                                <td>健康检查</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">/chat/stream</code></td>
+                                <td><span class="method-badge method-post">POST</span></td>
+                                <td>核心接口：流式对话</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">/docs</code></td>
+                                <td><span class="method-badge method-get">GET</span></td>
+                                <td>Swagger UI 文档</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="health" class="section">
+            <h2 class="section-title">健康检查</h2>
+            <div class="card">
+                <div class="card-header">
+                    <span class="method-badge method-get">GET</span>
+                    <span class="endpoint">/</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="subsection-title">响应示例</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>JSON</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code>{<br>  <span class="json-key">"message"</span>: <span class="json-string">"AI系统已启动！"</span><br>}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="chat-stream" class="section">
+            <h2 class="section-title">流式对话（核心接口）</h2>
+            <div class="card">
+                <div class="card-header">
+                    <span class="method-badge method-post">POST</span>
+                    <span class="endpoint">/chat/stream</span>
+                    <span class="response-type">Server-Sent Events</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="subsection-title">请求体</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>字段</th>
+                                <th>类型</th>
+                                <th>必填</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>user_id</td>
+                                <td>string</td>
+                                <td><span class="status-badge status-success">是</span></td>
+                                <td>用户唯一标识</td>
+                            </tr>
+                            <tr>
+                                <td>message</td>
+                                <td>string</td>
+                                <td><span class="status-badge status-success">是</span></td>
+                                <td>用户提问内容</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="subsection-title">请求示例</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>JSON</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code>{<br>  <span class="json-key">"user_id"</span>: <span class="json-string">"test001"</span>,<br>  <span class="json-key">"message"</span>: <span class="json-string">"我想学习机器学习中的决策树算法"</span><br>}</code></pre>
+                        </div>
+                    </div>
+
+                    <h3 class="subsection-title">响应格式</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 12px;">流式返回，按顺序接收以下类型：</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>类型</th>
+                                <th>说明</th>
+                                <th>示例内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">画像</code></td>
+                                <td>用户画像分析结果</td>
+                                <td>知识基础、认知风格等</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">学习资料</code></td>
+                                <td>生成的学习资源</td>
+                                <td>讲解文档、测验、思维导图</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">状态</code></td>
+                                <td>审核状态</td>
+                                <td>审核通过 / 审核失败重试</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">学习路线</code></td>
+                                <td>规划的学习步骤</td>
+                                <td>步骤名、行动、时长</td>
+                            </tr>
+                            <tr>
+                                <td><code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">完成</code></td>
+                                <td>全部流程结束</td>
+                                <td>全部生成完毕</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="subsection-title">详细响应示例</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>流式响应</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code><span class="keyword">// 1. 画像分析完成</span><br>{<br>  <span class="json-key">"type"</span>: <span class="json-string">"画像"</span>,<br>  <span class="json-key">"content"</span>: {<br>    <span class="json-key">"knowledge_base"</span>: <span class="json-string">"初学者"</span>,<br>    <span class="json-key">"cognitive_style"</span>: <span class="json-string">"视觉型"</span>,<br>    <span class="json-key">"weak_points"</span>: <span class="json-string">"数学推导"</span>,<br>    <span class="json-key">"interest"</span>: <span class="json-string">"AI"</span>,<br>    <span class="json-key">"learning_pace"</span>: <span class="json-string">"中等"</span>,<br>    <span class="json-key">"emotional_state"</span>: <span class="json-string">"积极"</span><br>  }<br>}<br><br><span class="keyword">// 2. 学习资料生成完成</span><br>{<br>  <span class="json-key">"type"</span>: <span class="json-string">"学习资料"</span>,<br>  <span class="json-key">"content"</span>: {<br>    <span class="json-key">"type"</span>: <span class="json-string">"multi_resource"</span>,<br>    <span class="json-key">"content"</span>: <span class="json-string">"1. **知识讲解文档**：决策树是一种常用的机器学习算法..."</span><br>  }<br>}<br><br><span class="keyword">// 3. 审核状态</span><br>{<br>  <span class="json-key">"type"</span>: <span class="json-string">"状态"</span>,<br>  <span class="json-key">"content"</span>: <span class="json-string">"审核通过"</span><br>}<br><br><span class="keyword">// 4. 学习路线生成完成</span><br>{<br>  <span class="json-key">"type"</span>: <span class="json-string">"学习路线"</span>,<br>  <span class="json-key">"content"</span>: [<br>    {<span class="json-key">"step_name"</span>: <span class="json-string">"理论学习"</span>, <span class="json-key">"action"</span>: <span class="json-string">"阅读讲解文档"</span>, <span class="json-key">"time_minutes"</span>: <span class="json-number">20</span>},<br>    {<span class="json-key">"step_name"</span>: <span class="json-string">"巩固练习"</span>, <span class="json-key">"action"</span>: <span class="json-string">"完成随堂测验"</span>, <span class="json-key">"time_minutes"</span>: <span class="json-number">15</span>},<br>    {<span class="json-key">"step_name"</span>: <span class="json-string">"知识总结"</span>, <span class="json-key">"action"</span>: <span class="json-string">"绘制思维导图"</span>, <span class="json-key">"time_minutes"</span>: <span class="json-number">10</span>}<br>  ]<br>}<br><br><span class="keyword">// 5. 全部完成</span><br>{<br>  <span class="json-key">"type"</span>: <span class="json-string">"完成"</span>,<br>  <span class="json-key">"content"</span>: <span class="json-string">"全部生成完毕"</span><br>}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="frontend" class="section">
+            <h2 class="section-title">前端接入示例</h2>
+            <div class="card">
+                <div class="card-header">
+                    <span style="font-size: 0.9rem;">JavaScript (SSE)</span>
+                </div>
+                <div class="card-body">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>JavaScript</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code><span class="keyword">async</span> <span class="keyword">function</span> chatWithAgent(userId, message) {<br>  <span class="keyword">const</span> response = <span class="keyword">await</span> fetch(<span class="string">'/chat/stream'</span>, {<br>    method: <span class="string">'POST'</span>,<br>    headers: {<br>      <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,<br>    },<br>    body: JSON.stringify({ user_id: userId, message: message }),<br>  });<br><br>  <span class="keyword">const</span> reader = response.body.getReader();<br>  <span class="keyword">const</span> decoder = <span class="keyword">new</span> TextDecoder(<span class="string">'utf-8'</span>);<br><br>  <span class="keyword">while</span> (<span class="keyword">true</span>) {<br>    <span class="keyword">const</span> { done, value } = <span class="keyword">await</span> reader.read();<br>    <span class="keyword">if</span> (done) <span class="keyword">break</span>;<br><br>    <span class="keyword">const</span> text = decoder.decode(value);<br>    <span class="keyword">const</span> lines = text.split(<span class="string">'\n\n'</span>);<br>    <br>    <span class="keyword">for</span> (<span class="keyword">const</span> line <span class="keyword">of</span> lines) {<br>      <span class="keyword">if</span> (line.startsWith(<span class="string">'data: '</span>)) {<br>        <span class="keyword">const</span> data = JSON.parse(line.substring(6));<br>        handleResponse(data);<br>      }<br>    }<br>  }<br>}<br><br><span class="keyword">function</span> handleResponse(data) {<br>  <span class="keyword">switch</span> (data.type) {<br>    <span class="keyword">case</span> <span class="string">'画像'</span>:<br>      console.log(<span class="string">'用户画像:'</span>, data.content);<br>      <span class="keyword">break</span>;<br>    <span class="keyword">case</span> <span class="string">'学习资料'</span>:<br>      console.log(<span class="string">'学习资料:'</span>, data.content);<br>      <span class="keyword">break</span>;<br>    <span class="keyword">case</span> <span class="string">'状态'</span>:<br>      console.log(<span class="string">'审核状态:'</span>, data.content);<br>      <span class="keyword">break</span>;<br>    <span class="keyword">case</span> <span class="string">'学习路线'</span>:<br>      console.log(<span class="string">'学习路线:'</span>, data.content);<br>      <span class="keyword">break</span>;<br>    <span class="keyword">case</span> <span class="string">'完成'</span>:<br>      console.log(<span class="string">'对话结束'</span>);<br>      <span class="keyword">break</span>;<br>  }<br>}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="backend" class="section">
+            <h2 class="section-title">后端调用示例</h2>
+            <div class="card">
+                <div class="card-header">
+                    <span style="font-size: 0.9rem;">Python (requests)</span>
+                </div>
+                <div class="card-body">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Python</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code><span class="keyword">import</span> requests<br><span class="keyword">import</span> json<br><br><span class="keyword">def</span> call_agent(user_id, message):<br>    url = <span class="string">"http://localhost:8000/chat/stream"</span><br>    payload = {<span class="string">"user_id"</span>: user_id, <span class="string">"message"</span>: message}<br>    <br>    response = requests.post(url, json=payload, stream=<span class="json-boolean">True</span>)<br>    <br>    <span class="keyword">for</span> line <span class="keyword">in</span> response.iter_lines():<br>        <span class="keyword">if</span> line <span class="keyword">and</span> line.decode(<span class="string">'utf-8'</span>).startswith(<span class="string">"data: "</span>):<br>            data = json.loads(line.decode(<span class="string">'utf-8'</span>)[6:])<br>            print(f<span class="string">"收到: {data['type']} - {data['content']}"</span>)</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="workflow" class="section">
+            <h2 class="section-title">工作流流程</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="flowchart">
+用户输入
+    ↓
+[画像机器人] → 分析学习特征（知识基础、认知风格、易错点等）
+    ↓
+[RAG检索] → 从知识库检索相关知识点
+    ↓
+[资源生成] → 生成学习资料（讲解文档、测验、思维导图）
+    ↓
+[审核机器人] → 内容质量检查（关键词检测 + 长度验证）
+    ↓
+    ├─ 通过 → [路径规划] → 输出学习路线
+    └─ 失败 → 重新生成（最多3次重试）
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>阶段</th>
+                                <th>Agent名称</th>
+                                <th>输出内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>画像机器人</td>
+                                <td>用户画像（6个维度）</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>RAG检索</td>
+                                <td>相关知识点文档</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>资源生成</td>
+                                <td>学习资料（讲解、测验、思维导图）</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>审核机器人</td>
+                                <td>审核状态（通过/失败）</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>路径规划</td>
+                                <td>学习路线（3个步骤）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="errors" class="section">
+            <h2 class="section-title">错误处理</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>错误类型</th>
+                                <th>HTTP状态码</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>请求参数缺失</td>
+                                <td><span class="status-badge status-error">422</span></td>
+                                <td>user_id 或 message 为空</td>
+                            </tr>
+                            <tr>
+                                <td>服务内部错误</td>
+                                <td><span class="status-badge status-error">500</span></td>
+                                <td>LLM调用失败或其他异常</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="env" class="section">
+            <h2 class="section-title">环境变量配置</h2>
+            <div class="card">
+                <div class="card-body">
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">参考 <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px;">.env.example</code> 文件：</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>.env</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code><span class="keyword"># 讯飞星火API配置</span><br>SPARK_APP_ID=<span class="string">""</span><br>SPARK_API_KEY=<span class="string">"your_api_key_here"</span><br>SPARK_API_SECRET=<span class="string">"your_api_secret_here"</span><br>SPARK_BASE_URL=<span class="string">"https://spark-api-open.xf-yun.com/x2/chat/completions"</span><br>SPARK_MODEL=<span class="string">"spark-x2"</span></code></pre>
+                        </div>
+                    </div>
+                    <div class="tip-box">
+                        <p><strong>注意：</strong> <span class="env-variable">.env</span> 文件包含敏感信息，不要提交到Git仓库！</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dependencies" class="section">
+            <h2 class="section-title">依赖清单</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>requirements.txt</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code>fastapi>=0.100.0<br>uvicorn>=0.23.0<br>pydantic>=2.0.0<br>python-dotenv>=1.0.0<br>requests>=2.31.0<br>langgraph>=1.0.0<br>langchain-core>=1.0.0</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="startup" class="section">
+            <h2 class="section-title">启动方式</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Bash</span>
+                            <span class="code-copy" onclick="copyCode(this)">复制</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code><span class="keyword"># 开发模式（支持热重载）</span><br>python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload<br><br><span class="keyword"># 生产模式</span><br>uvicorn app.main:app --host 0.0.0.0 --port 8000</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer style="margin-top: 60px; padding-top: 30px; border-top: 1px solid var(--border); text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+            <p>AI智能体模块 - API接口文档</p>
+            <p style="margin-top: 8px;">技术栈：FastAPI + LangGraph | 版本：1.0.0</p>
+        </footer>
+    </main>
+
+    <script>
+        function copyCode(element) {
+            const codeBlock = element.parentElement.nextElementSibling;
+            const code = codeBlock.textContent.trim();
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = element.textContent;
+                element.textContent = '已复制';
+                element.style.color = '#22c55e';
+                
+                setTimeout(() => {
+                    element.textContent = originalText;
+                    element.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+                        a.classList.remove('active');
+                        if (a.getAttribute('href') === `#${id}`) {
+                            a.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
