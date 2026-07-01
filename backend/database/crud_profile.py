@@ -23,3 +23,8 @@ def update_user_profile(db: Session, user_id: int, portrait_data: dict):
     db.commit()
     db.refresh(user_profile)
     return user_profile
+
+
+def update_user_student(db: Session, user_id: int, portrait_data: dict):
+    """写入 students 表中的画像数据，兼容旧接口"""
+    return update_user_profile(db=db, user_id=user_id, portrait_data=portrait_data)

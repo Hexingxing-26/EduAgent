@@ -11,9 +11,11 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: str | None = "student"
 
 class UserOut(UserBase):
     id: int
+    role: str | None = "student"
     create_time: datetime
     class Config:
         orm_mode = True

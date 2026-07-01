@@ -11,6 +11,12 @@ class EduUser(Base):
     password = Column(String(100), nullable=False)
     nickname = Column(String(50))
     major = Column(String(50))
+    role = Column(
+        String(20),
+        default="student",
+        nullable=False,
+        comment="用户角色：student学生 / teacher教师 / admin超级管理员"
+    )
     create_time = Column(DateTime, default=func.now())
 
 # 对话记录表

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 # 项目内部依赖
 from database.crud_conversation import create_conversation
-from database.crud_profile import get_user_profile, update_user_profile
+from database.crud_profile import get_user_profile, update_user_profile, update_user_student
 from services.llm_utils import LLMClient, extract_profile, get_default_profile
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,33 @@ logger = logging.getLogger(__name__)
 def format_sse(data: dict) -> str:
     """标准SSE返回格式"""
     return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+def check_profile_format(profile_dict: dict) -> dict:
+    standard_keys = {
+        "knowledge_base", "cognitive_style", "weak_points",
+        "interest", "learning_pace", "emotional_state"
+    }
+    default = {
+        "knowledge_base": "初学者",
+        "cognitive_style": "视觉型",
+        "weak_points": "数学推导,逻辑推理",
+        "interest": "人工智能,编程",
+        "learning_pace": "中等",
+        "emotional_state": "积极"
+    }
+    # 补齐缺失字段
+    for k in standard_keys:
+        if k not in profile_dict or not isinstance(profile_dict[k], str):
+            profile_dict[k] = default[k]
+    return profile_dict
+
+def trim_dialogue_text(text: str, max_length=1800) -> str:
+    """截取最新一段对话，控制送入画像抽取文本长度"""
+    if len(text) <= max_length:
+        return text
+    # 保留末尾内容
+    return text[-max_length:]
+
 # 自建异步流式大模型调用函数，全部写在此文件
 async def chat_stream(messages, temperature=0.7, max_tokens=4096, provider="xunfei"):
     client = LLMClient(provider=provider)
@@ -67,7 +94,9 @@ async def extract_portrait_prompt(dialogue_text: str):
     profile_dict = await asyncio.to_thread(extract_profile, dialogue_text)
     if not profile_dict:
         return get_default_profile()
-    return profile_dict
+    # 新增标准化校验
+    fixed_profile = check_profile_format(profile_dict)
+    return fixed_profile
 
 # 流式对话主生成器，接口调用入口
 async def stream_chat_response(
@@ -101,11 +130,33 @@ async def stream_chat_response(
         )
         # 整合对话抽取画像
         all_dialog = f"用户提问：{user_msg}\nAI回答：{full_ai_reply}"
-        portrait_result = await extract_portrait_prompt(all_dialog)
+        # 超长文本截断
+        trim_dialog = trim_dialogue_text(all_dialog)
+        logger.info(f"画像抽取输入文本（截断后）：{trim_dialog[:600]}")
+        portrait_result = await extract_portrait_prompt(trim_dialog)
+        logger.info(f"标准化后的画像数据：{portrait_result}")
         # 更新学生画像表
         update_user_profile(db=db, user_id=user_id, portrait_data=portrait_result)
+        update_user_student(db=db, user_id=user_id, portrait_data=portrait_result)
+        logger.info(f"用户{user_id}画像更新成功，已写入students表")
         # 推送结束标识
         yield format_sse({"type": "done"})
+
+    except aiohttp.ClientError as e:
+        # 大模型流式网络/超时异常
+        err_msg = f"大模型流式接口请求异常：{str(e)}"
+        logger.error(err_msg)
+        yield format_sse({"type": "error", "msg": err_msg})
+    except json.JSONDecodeError as e:
+        # AI返回画像JSON解析失败
+        err_msg = "画像JSON解析失败，自动使用默认画像"
+        logger.error(f"{err_msg} 错误详情：{str(e)}")
+        # 解析失败兜底写入默认画像
+        default_p = get_default_profile()
+        update_user_student(db, user_id, default_p)
+        yield format_sse({"type": "done"})
     except Exception as e:
-        logger.error(f"流式对话全局异常：{str(e)}")
-        yield format_sse({"type": "error", "msg": f"对话服务异常：{str(e)}"})
+        # 全局兜底未知异常
+        err_msg = f"对话服务未知异常：{str(e)}"
+        logger.error(err_msg, exc_info=True)
+        yield format_sse({"type": "error", "msg": err_msg})

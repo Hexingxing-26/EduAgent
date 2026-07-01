@@ -24,11 +24,11 @@ router = APIRouter(prefix="/conversation", tags=["对话会话模块"])
 def add_conversation(
     conv_data: ConversationCreate,
     db: Session = Depends(get_db),
-    current_uid: int = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     return create_conversation(
         db=db,
-        user_id=current_uid,
+        user_id=current_user["user_id"],
         session_id=conv_data.session_id,
         role=conv_data.role,
         content=conv_data.content,
@@ -40,17 +40,17 @@ def add_conversation(
 def get_one_session(
     session_id: str,
     db: Session = Depends(get_db),
-    current_uid: int = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
-    return get_session_conversations(db, current_uid, session_id)
+    return get_session_conversations(db, current_user["user_id"], session_id)
 
 # 3. 查询用户所有会话ID列表
 @router.get("/session/list", response_model=SessionListResp)
 def get_all_session(
     db: Session = Depends(get_db),
-    current_uid: int = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
-    session_ids = get_user_all_session_ids(db, current_uid)
+    session_ids = get_user_all_session_ids(db, current_user["user_id"])
     return {"session_ids": session_ids}
 
 # 4. 删除指定会话全部消息
@@ -58,16 +58,16 @@ def get_all_session(
 def del_one_session(
     session_id: str,
     db: Session = Depends(get_db),
-    current_uid: int = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
-    delete_session_conversation(db, current_uid, session_id)
+    delete_session_conversation(db, current_user["user_id"], session_id)
     return {"msg": "当前会话对话已清空"}
 
 # 5. 清空用户全部对话记录
 @router.delete("/all")
 def del_all_conversation(
     db: Session = Depends(get_db),
-    current_uid: int = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
-    delete_user_all_conversation(db, current_uid)
+    delete_user_all_conversation(db, current_user["user_id"])
     return {"msg": "您所有对话记录已清空"}
