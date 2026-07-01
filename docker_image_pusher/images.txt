@@ -1,0 +1,4 @@
+# EduAgent项目构建依赖基础镜像
+nginx:alpine
+python:3.11-slim
+node:22-alpine
