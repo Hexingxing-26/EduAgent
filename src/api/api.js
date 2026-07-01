@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const LOGIN_PATH = import.meta.env.VITE_LOGIN_PATH || '/user/login'
+const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || '/user/register'
 const USER_INFO_PATH = import.meta.env.VITE_USER_INFO_PATH || '/user/info'
 const USE_MOCK_LOGIN = import.meta.env.VITE_USE_MOCK_LOGIN !== 'false'
 
@@ -29,8 +30,8 @@ api.interceptors.request.use(
 // 响应拦截器（处理401和业务错误码）
 api.interceptors.response.use(
   (response) => {
-    // 如果后端返回的 code !== 0，说明业务失败
-    if (response.data.code !== undefined && response.data.code !== 0) {
+    // 如果后端返回的 code 不是 200/0，说明业务失败
+    if (response.data?.code !== undefined && response.data.code !== 200 && response.data.code !== 0) {
       console.error('业务错误:', response.data.msg)
       return Promise.reject(new Error(response.data.msg || '请求失败'))
     }
@@ -47,30 +48,44 @@ api.interceptors.response.use(
 
 // ====== 以下是实际调用的接口 ======
 
-// 1. 登录接口：默认请求后端 /auth/login
+// 1. 注册接口：默认请求后端 /user/register
+export const register = (userData = {}) => {
+  const { username, nickname, major, password } = userData
+
+  return api.post(REGISTER_PATH, {
+    username,
+    nickname,
+    major,
+    password,
+  })
+}
+
+// 2. 登录接口：默认请求后端 /user/login
 export const login = (username, password) => {
+  // 1. 如果启用 Mock 模式，走假数据
   if (USE_MOCK_LOGIN) {
-    console.log('[单机模式] 登录账号:', username, '密码:', password)
+    console.log('[单机模式] 登录账号:', username, '密码:', password);
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           data: {
             token: 'fake-token-123456',
           },
-        })
-      }, 500)
-    })
+        });
+      }, 500);
+    });
   }
 
+  // 2. 真实请求：按接口文档使用 Query 参数
   return api.post(LOGIN_PATH, null, {
     params: {
       username,
       password,
     },
   })
-}
+};
 
-// 2. 获取当前用户信息：默认请求后端 /auth/me
+// 3. 获取当前用户信息：默认请求后端 /user/info
 export const getUserInfo = () => {
   if (USE_MOCK_LOGIN) {
     console.log('[单机模式] 获取用户信息')

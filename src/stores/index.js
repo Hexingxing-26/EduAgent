@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, getUserInfo } from '@/api/api'
+import { login, getUserInfo, register as registerUser } from '@/api/api'
 import router from '@/router'
 
 export const useUserStore = defineStore('user', {
@@ -53,8 +53,17 @@ export const useUserStore = defineStore('user', {
     async login(loginForm) {
       try {
         const res = await login(loginForm.username, loginForm.password)
-        const payload = res?.data || {}
-        const token = payload.token || payload.accessToken || payload.access_token || payload.data?.token || payload.data?.accessToken || payload.data?.data?.token
+        const body = res?.data || {}
+        const data = body.data || body
+        const token =
+          data?.token ||
+          data?.accessToken ||
+          data?.access_token ||
+          body?.token ||
+          body?.accessToken ||
+          body?.access_token ||
+          (typeof data === 'string' ? data : null) ||
+          (typeof body === 'string' ? body : null)
 
         if (!token) {
           throw new Error('登录接口未返回 token')
@@ -62,7 +71,17 @@ export const useUserStore = defineStore('user', {
 
         this.setToken(token)
         await this.fetchUserInfo()
+        console.log('✅ 准备跳转到 /dashboard')
         router.push('/dashboard')
+        return Promise.resolve(res)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async register(registerForm) {
+      try {
+        const res = await registerUser(registerForm)
         return Promise.resolve(res)
       } catch (error) {
         return Promise.reject(error)
@@ -74,8 +93,9 @@ export const useUserStore = defineStore('user', {
       if (!this.token) return
       try {
         const res = await getUserInfo()
-        const payload = res?.data || {}
-        const userInfo = payload.user || payload.data?.user || payload.data?.data?.user || payload.data || payload.data?.data || payload
+        const body = res?.data || {}
+        const data = body.data || body
+        const userInfo = data.user || data.data?.user || data.data?.data?.user || data
         this.setUserInfo(userInfo)
         return Promise.resolve(res)
       } catch (error) {

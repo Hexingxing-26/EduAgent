@@ -9,6 +9,7 @@
       </template>
 
       <el-form
+        v-if="!isRegisterMode"
         :model="loginForm"
         :rules="rules"
         ref="loginFormRef"
@@ -43,11 +44,63 @@
 
         <div class="other-options">
           <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-          <el-link type="primary" @click="handleRegister">注册账号</el-link>
+          <el-link type="primary" @click="switchToRegister">注册账号</el-link>
         </div>
       </el-form>
 
-      <div class="demo-login">
+      <el-form
+        v-else
+        :model="registerForm"
+        :rules="registerRules"
+        ref="registerFormRef"
+        label-width="90px"
+        class="login-form"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="registerForm.username" placeholder="请输入用户名" clearable />
+        </el-form-item>
+
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="registerForm.nickname" placeholder="请输入昵称" clearable />
+        </el-form-item>
+
+        <el-form-item label="专业" prop="major">
+          <el-input v-model="registerForm.major" placeholder="请输入专业" clearable />
+        </el-form-item>
+
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="registerForm.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password
+            clearable
+          />
+        </el-form-item>
+
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="registerForm.confirmPassword"
+            type="password"
+            placeholder="请再次输入密码"
+            show-password
+            clearable
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" style="width: 100%" @click="handleRegister" :loading="loading">
+            注册
+          </el-button>
+        </el-form-item>
+
+        <div class="other-options">
+          <span></span>
+          <el-link type="primary" @click="switchToLogin">返回登录</el-link>
+        </div>
+      </el-form>
+
+      <div v-if="!isRegisterMode" class="demo-login">
         <p>演示账号：</p>
         <el-tag type="success">学生：student / 123456</el-tag>
         <el-tag type="warning">教师：teacher / 123456</el-tag>
@@ -67,12 +120,22 @@ import { User, Lock } from '@element-plus/icons-vue'
 const router = useRouter()
 const userStore = useUserStore()
 const loginFormRef = ref(null)
+const registerFormRef = ref(null)
 const loading = ref(false)
 const rememberMe = ref(true)
+const isRegisterMode = ref(false)
 
 const loginForm = reactive({
   username: '',
   password: '',
+})
+
+const registerForm = reactive({
+  username: '',
+  nickname: '',
+  major: '',
+  password: '',
+  confirmPassword: '',
 })
 
 const rules = {
@@ -84,6 +147,36 @@ const rules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' },
   ],
+}
+
+const validateConfirmPassword = (rule, value, callback) => {
+  if (!value) {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== registerForm.password) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' },
+  ],
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' },
+  ],
+  major: [
+    { required: true, message: '请输入专业', trigger: 'blur' },
+    { min: 2, max: 30, message: '长度在 2 到 30 个字符', trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' },
+  ],
+  confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
 }
 
 const handleLogin = async () => {
@@ -114,8 +207,40 @@ const handleLogin = async () => {
   })
 }
 
-const handleRegister = () => {
-  ElMessage.info('注册功能开发中，请联系管理员')
+const switchToRegister = () => {
+  isRegisterMode.value = true
+}
+
+const switchToLogin = () => {
+  isRegisterMode.value = false
+}
+
+const handleRegister = async () => {
+  if (!registerFormRef.value) return
+
+  await registerFormRef.value.validate(async (valid) => {
+    if (valid) {
+      loading.value = true
+
+      try {
+        await userStore.register({
+          username: registerForm.username,
+          nickname: registerForm.nickname,
+          major: registerForm.major,
+          password: registerForm.password,
+        })
+        ElMessage.success('注册成功，请使用新账号登录')
+        switchToLogin()
+        loginForm.username = registerForm.username
+        loginForm.password = ''
+      } catch (error) {
+        ElMessage.error(error?.message || '注册失败，请稍后重试')
+        console.error(error)
+      } finally {
+        loading.value = false
+      }
+    }
+  })
 }
 </script>
 
