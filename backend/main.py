@@ -3,11 +3,12 @@ import json
 from api.portrait_router import router as portrait_router
 from api.conversation_router import router as conv_router
 from api.v1.chat_stream_router import router as chat_stream_router
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from database.connect import engine, Base
 from api import user
+from api.common import get_current_user
 from utils.exception import register_exception
 from utils.logger import log
 
@@ -53,7 +54,7 @@ def health():
 
 
 @app.post("/agent/chat/stream")
-async def agent_chat_stream(request: dict):
+async def agent_chat_stream(request: dict, current_user: int = Depends(get_current_user)):
     """SSE streaming endpoint for the AI agent workflow.
 
     Drives the full ``profile -> rag -> generator -> guardrail -> planner``
@@ -62,7 +63,7 @@ async def agent_chat_stream(request: dict):
     async def event_stream():
         graph = create_workflow_graph()
         state = AgentState(
-            user_id=request.get("user_id", "default"),
+            user_id=str(current_user),
             messages=[{"role": "user", "content": request.get("message", "")}],
             profile={}, retrieved_docs=[], generated_resource={},
             is_approved=False, learning_path=[], retry_count=0
