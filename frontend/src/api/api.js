@@ -76,6 +76,12 @@ export const login = (username, password) => {
   })
 }
 
+// 1.5 注册接口：POST /user/register
+// 后端使用 JSON body（UserCreate Pydantic 模型），与登录的 form-urlencoded 不同
+export const register = (username, password, nickname) => {
+  return api.post('/user/register', { username, password, nickname })
+}
+
 // 2. 获取当前用户信息：默认请求后端 /user/info
 export const getUserInfo = () => {
   if (USE_MOCK_LOGIN) {
