@@ -29,10 +29,10 @@ api.interceptors.request.use(
 // 响应拦截器（处理401和业务错误码）
 api.interceptors.response.use(
   (response) => {
-    // 如果后端返回的 code !== 0，说明业务失败
-    if (response.data && response.data.code !== undefined && response.data.code !== 0) {
-      console.error('业务错误:', response.data.msg)
-      return Promise.reject(new Error(response.data.msg || '请求失败'))
+    const body = response.data
+    if (body && body.code !== undefined && body.code !== 200) {
+      console.error('业务错误:', body.msg)
+      return Promise.reject(new Error(body.msg || '请求失败'))
     }
     return response
   },
