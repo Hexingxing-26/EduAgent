@@ -63,6 +63,14 @@ LLM_BASE_URL="https://api.openai.com/v1"
 LLM_MODEL="gpt-4o"
 ```
 
+② **JWT 密钥**（必改，**不能以 `change-` 开头**，否则后端会直接退出并触发 Docker 容器无限重启）：
+
+```env
+JWT_SECRET_KEY="aB3xK9mQ7wR2tY5nL8pV1cF4hJ6dS0gU"
+```
+
+> 建议改成至少 32 位的随机字符串（如 `openssl rand -base64 32` 的输出），不能留空，也不能保留 `.env.example` 里的 `change-me-...` 占位符。
+
 > ❓ **没有 API Key？**
 > - **DeepSeek**：去 [platform.deepseek.com](https://platform.deepseek.com) 注册 → 创建 API Key
 > - **OpenAI**：去 [platform.openai.com](https://platform.openai.com) 获取
@@ -136,6 +144,7 @@ docker compose down -v
 | `LLM_API_KEY` | API 密钥（**必填**） | sk-xxxx |
 | `LLM_BASE_URL` | API 接口地址 | https://api.openai.com/v1 |
 | `LLM_MODEL` | 模型名称 | gpt-4o |
+| `JWT_SECRET_KEY` | JWT 密钥（**必改**，不能以 `change-` 开头） | aB3xK9mQ... |
 | `BACKEND_PORT` | 后端端口（默认 8000） | 8000 |
 | `FRONTEND_PORT` | 前端端口（默认 80） | 80 |
 
@@ -191,6 +200,17 @@ FRONT_PORT=8081
 3. 选择 Resources → WSL Integration
 4. 打开你的 WSL 发行版开关
 5. 点击 Apply & Restart
+
+### Q：`docker compose up -d` 后端容器不断重启，日志显示 "JWT_SECRET_KEY is not set or still uses default value"？
+
+**A：** `.env` 中的 `JWT_SECRET_KEY` 不能以 `change-` 开头（系统会拒绝启动）。修改为随机字符串（至少 32 字符），然后重新启动：
+
+```bash
+notepad .env
+# 修改 JWT_SECRET_KEY 为随机字符串
+docker compose down
+docker compose up -d
+```
 
 ---
 
