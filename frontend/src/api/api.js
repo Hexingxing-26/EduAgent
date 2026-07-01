@@ -149,25 +149,27 @@ export async function chatStream(message, sessionId, onChunk, onDone, onError) {
 
     while (true) {
       const { done, value } = await reader.read()
-      console.log('[chatStream] read chunk:', { done, bytes: value?.length || 0 })
       if (done) {
         if (onDone) onDone()
         break
       }
       buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n\n')
+      // Split on any newline, handle both LF and CRLF
+      const lines = buffer.split(/\r?\n/)
       buffer = lines.pop() || ''
-      console.log('[chatStream] buffer size:', buffer.length, 'lines found:', lines.length)
       for (const line of lines) {
-        console.log('[chatStream] line:', line.slice(0, 80))
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6))
-            console.log('[chatStream] parsed:', data)
-            if (onChunk) onChunk(data)
-          } catch (e) {
-            console.log('[chatStream] parse error:', e.message, 'line:', line.slice(0, 80))
-          }
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data: ')) continue
+        const jsonStr = trimmed.slice(6)
+        if (jsonStr === '[DONE]') {
+          if (onDone) onDone()
+          return
+        }
+        try {
+          const data = JSON.parse(jsonStr)
+          if (onChunk) onChunk(data)
+        } catch (e) {
+          // skip malformed SSE lines
         }
       }
     }
