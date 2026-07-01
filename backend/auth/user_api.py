@@ -25,7 +25,7 @@ def login(form: LoginForm, db: Session = Depends(get_db)):
     if not user or not verify_password(form.password, user.password):
         raise HTTPException(status_code=401, detail="账号或密码错误")
     # 暂时先把role写为固定值，后续如果表内新增role字段再优化
-    token_data = {"username": user.username, "role": "student"}
+    token_data = {"username": user.username, "role": user.role}
     token = create_access_token(token_data)
     return {"access_token": token, "token_type": "bearer"}
 
@@ -48,4 +48,5 @@ def get_user_info(user = Depends(get_current_user)):
         "username": user.username,
         "nickname": user.nickname,
         "major": user.major,
+        "role": user.role
     }
