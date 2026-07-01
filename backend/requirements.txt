@@ -1,0 +1,42 @@
+# === EduAgent Backend Dependencies ===
+# Aggregated from AI-Agent-System and feature-db branches
+
+# Web Framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
+
+# Data Validation
+pydantic>=2.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# HTTP Clients
+requests>=2.31.0
+aiohttp>=3.9.0
+
+# AI Agent Framework
+langgraph>=0.2.0
+langchain-core>=0.3.0
+
+# Vector Database & Embeddings
+faiss-cpu>=1.7.4
+text2vec>=1.0.0
+numpy>=1.24.0
+
+# Document Processing
+PyPDF2>=3.0.0
+python-docx>=1.0.0
+
+# Database
+sqlalchemy>=1.4.0
+pymysql>=1.1.0
+alembic>=1.13.0
+
+# Authentication
+pyjwt>=2.8.0
+passlib[bcrypt]>=1.7.4
+
+# Logging
+loguru>=0.7.0
