@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import jwt
 
 # 开发测试密钥，正式部署放到.env文件
-SECRET_KEY = "eduagent_jwt_secret_2026"
+SECRET_KEY = "secret123456"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 

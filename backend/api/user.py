@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel  # 新增：用来做登录JSON校验
 from sqlalchemy.orm import Session
 from database.connect import get_db
 from database import crud
@@ -8,6 +9,10 @@ from utils.response import success
 from utils.exception import ApiException
 from utils.pwd_util import hash_password, verify_password
 
+# 新增：登录接口的JSON请求体模型
+class LoginForm(BaseModel):
+    username: str
+    password: str
 router = APIRouter(prefix="/user", tags=["用户模块"])
 
 # 公开注册：仅注册学生，强制固定role
@@ -46,9 +51,9 @@ def create_teacher_account(
 
 # 登录接口
 @router.post("/login")
-def login(username: str, password: str, db: Session = Depends(get_db)):
-    user = crud.get_user_by_username(db, username)
-    if not user or not verify_password(password, user.password):
+def login(form: LoginForm, db: Session = Depends(get_db)):
+    user = crud.get_user_by_username(db, form.username)
+    if not user or not verify_password(form.password, user.password):
         raise ApiException(400, "账号密码错误")
     token = create_token(user.id, role=user.role)
     return success(data={"token": token})
