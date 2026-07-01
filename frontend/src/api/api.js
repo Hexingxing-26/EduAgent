@@ -195,4 +195,10 @@ export const getResourceStats = () => {
   return api.get('/admin/stats/resources')
 }
 
+// 获取用户 LLM 设置：GET /user/settings
+export const fetchSettings = () => api.get('/user/settings')
+
+// 保存用户 LLM 设置：PUT /user/settings
+export const saveSettings = (data) => api.put('/user/settings', data)
+
 export default api
