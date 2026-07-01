@@ -74,6 +74,8 @@ class EduResource(Base):
     resource_type = Column(String(30))
     content = Column(Text)
     progress = Column(Integer, default=0)
+    generate_progress = Column(Integer, default=0, comment="生成进度0-100")
+    task_id = Column(String(100), comment="AI生成任务唯一标识")
     create_time = Column(DateTime, default=func.now())
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON, DateTime
 from sqlalchemy.sql import func

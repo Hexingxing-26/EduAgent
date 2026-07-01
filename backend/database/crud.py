@@ -1,5 +1,12 @@
 from sqlalchemy.orm import Session
 from .models import EduUser, EduChat, Students, EduResource, LearningRecords
+from .crud_edu_resource import (
+    create_edu_resource,
+    update_resource_progress,
+    update_resource_content,
+    get_user_resource_list,
+    delete_resource
+)
 
 # 根据用户名查询用户
 def get_user_by_username(db: Session, username: str):
