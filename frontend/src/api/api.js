@@ -126,7 +126,7 @@ export async function chatStream(message, sessionId, onChunk, onDone, onError) {
         'Authorization': token ? `Bearer ${token}` : '',
       },
       body: JSON.stringify({
-        message,
+        user_content: message,
         session_id: sessionId || Date.now().toString(),
       }),
     })
