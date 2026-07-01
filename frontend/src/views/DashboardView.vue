@@ -37,8 +37,8 @@
 
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="12">
-        <el-card header="最近学习">
-          <el-table :data="recentLearning" style="width: 100%">
+          <el-card header="最近学习">
+          <el-table :data="recentLearning" style="width: 100%" @row-click="goToPath">
             <el-table-column prop="title" label="课程名称" />
             <el-table-column prop="progress" label="进度" width="100">
               <template #default="{ row }">
@@ -77,8 +77,10 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 const learningProfile = computed(() => userStore.currentProfile)
@@ -89,10 +91,14 @@ const unreadMessages = 3
 const totalResources = 128
 
 const recentLearning = [
-  { title: 'Python基础入门', progress: 85, lastStudyTime: '2小时前' },
-  { title: '机器学习概论', progress: 60, lastStudyTime: '昨天' },
-  { title: '深度学习基础', progress: 30, lastStudyTime: '3天前' },
+  { id: 1, title: 'Python基础入门', progress: 85, lastStudyTime: '2小时前' },
+  { id: 2, title: '机器学习概论', progress: 60, lastStudyTime: '昨天' },
+  { id: 3, title: '深度学习基础', progress: 30, lastStudyTime: '3天前' },
 ]
+
+const goToPath = (row) => {
+  router.push(`/path?courseId=${row.id}&courseName=${encodeURIComponent(row.title)}`)
+}
 </script>
 
 <style scoped>

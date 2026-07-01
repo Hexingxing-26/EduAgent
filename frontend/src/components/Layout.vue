@@ -129,6 +129,7 @@ const pageTitle = computed(() => {
     '/path': '个性化学习路径',
     '/resources': '学习资源中心',
     '/admin': '管理后台',
+    '/settings': '系统设置',
   }
   return titles[route.path] || '智学系统'
 })
@@ -147,7 +148,7 @@ const handleCommand = (command) => {
       router.push('/profile')
       break
     case 'settings':
-      ElMessage.info('设置功能开发中')
+      router.push('/settings')
       break
     case 'logout':
       userStore.logout()
@@ -165,6 +166,7 @@ const updateActiveMenu = () => {
   else if (path.includes('/path')) activeMenu.value = 'path'
   else if (path.includes('/resources')) activeMenu.value = 'resources'
   else if (path.includes('/admin')) activeMenu.value = 'admin'
+  else if (path.includes('/settings')) activeMenu.value = 'settings'
 }
 
 onMounted(() => {
