@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Header
 import jwt
+from sqlalchemy.orm import Session
+from database.connect import get_db
 from database.crud import get_user_by_id
 
 SECRET_KEY = "secret123456"
 ALGORITHM = "HS256"
 ACCESS_EXPIRE_MINUTES = 120
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
-
+# 生成Token函数保持不变
 def create_token(user_id: int, role: Optional[str] = None):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_EXPIRE_MINUTES)
     payload = {"sub": str(user_id), "exp": expire}
@@ -19,20 +19,36 @@ def create_token(user_id: int, role: Optional[str] = None):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+# 重写鉴权函数：从Header拿token，抛弃OAuth2PasswordBearer
+def get_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    # 校验请求头是否携带Token
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="未携带Token，请重新登录")
+
+    token = authorization.split(" ")[1]
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         uid = int(payload.get("sub"))
-        user_role = payload.get("role", "student")  # 兜底默认 student
-        if uid is None:
-            raise HTTPException(status_code=401, detail="token无效")
+        user_role = payload.get("role", "student")
+
+        if not uid:
+            raise HTTPException(401, "Token无效")
+        # 校验用户是否还存在于数据库
+        db_user = get_user_by_id(db, uid)
+        if not db_user:
+            raise HTTPException(401, "用户已被注销")
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(401, "Token已过期")
     except Exception:
-        raise HTTPException(status_code=401, detail="token过期或错误")
-    # 返回包含用户ID和角色的字典
+        raise HTTPException(401, "Token错误")
+
     return {"user_id": uid, "role": user_role}
 
-
-# ---------- 角色权限依赖（可在路由中复用） ----------
+# 封装好的角色权限依赖，后续业务接口直接用
 def only_student(user_info = Depends(get_current_user)):
     if user_info["role"] != "student":
         raise HTTPException(status_code=403, detail="仅学生可访问")
