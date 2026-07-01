@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 
-# 密码加密算法
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 密码加密算法：使用 pbkdf2_sha256，避免 bcrypt 依赖兼容性问题
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 def hash_password(raw_pwd: str) -> str:
     """明文密码加密"""

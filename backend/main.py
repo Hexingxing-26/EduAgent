@@ -7,18 +7,10 @@ from database.connect import engine, Base
 from api import user
 from utils.exception import register_exception
 from utils.logger import log
-from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="个性化学习多智能体系统")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # 跨域
 app.add_middleware(
@@ -34,6 +26,7 @@ register_exception(app)
 
 # 注册全部路由
 app.include_router(resource_router)
+app.include_router(user.router)
 app.include_router(conv_router)
 app.include_router(portrait_router)
 

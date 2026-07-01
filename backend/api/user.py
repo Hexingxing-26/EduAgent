@@ -7,7 +7,7 @@ from schemas.base import UserCreate, UserOut
 from api.common import create_token, get_current_user
 from utils.response import success
 from utils.exception import ApiException
-from utils.pwd_util import hash_password, verify_password
+from auth.pwd_util import hash_password, verify_password
 
 # 新增：登录接口的JSON请求体模型
 class LoginForm(BaseModel):

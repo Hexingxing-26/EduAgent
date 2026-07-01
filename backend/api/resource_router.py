@@ -8,7 +8,7 @@ from database.crud import (
     get_user_resource_list,
     delete_resource
 )
-from api.user import get_current_user
+from api.common import get_current_user
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/resource", tags=["edu资源管理模块"])
@@ -37,7 +37,7 @@ def create_resource(
 ):
     res = create_edu_resource(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user["user_id"],
         portrait_id=req.portrait_id,
         resource_type=req.resource_type
     )
@@ -84,7 +84,7 @@ def get_user_resource(
 ):
     data = get_user_resource_list(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user["user_id"],
         page=page,
         page_size=page_size,
         res_type=resource_type

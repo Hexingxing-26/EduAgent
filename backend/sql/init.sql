@@ -5,6 +5,7 @@ CREATE TABLE edu_user (
   password VARCHAR(100) NOT NULL,
   nickname VARCHAR(50),
   major VARCHAR(50),
+  role VARCHAR(20) NOT NULL DEFAULT 'student' COMMENT '用户角色：student学生 / teacher教师 / admin超级管理员',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

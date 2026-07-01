@@ -17,5 +17,6 @@ class UserOut(UserBase):
     id: int
     role: str | None = "student"
     create_time: datetime
+
     class Config:
-        orm_mode = True
+        from_attributes = True
