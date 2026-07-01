@@ -112,7 +112,13 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="previewVisible" :title="previewResource?.title || '资源预览'" width="700px">
+    <el-dialog
+      v-model="previewVisible"
+      :title="previewResource?.title || '文件预览'"
+      width="80%"
+      top="3vh"
+      destroy-on-close
+    >
       <div class="preview-box">
         <div class="preview-header">
           <el-tag :type="getFileTypeTag(previewResource?.fileType)" size="small">
@@ -120,7 +126,12 @@
           </el-tag>
           <span class="preview-meta">{{ previewResource?.description }}</span>
         </div>
-        <div class="preview-content" v-html="previewContent"></div>
+        <iframe
+          :srcdoc="previewContent"
+          class="preview-frame"
+          sandbox="allow-same-origin"
+          title="文件预览"
+        />
       </div>
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>
@@ -479,6 +490,12 @@ const refreshResources = () => {
 }
 
 const viewResource = (resource) => {
+  // Check if resource has an external URL
+  if (resource.url && resource.url.startsWith('http')) {
+    window.open(resource.url, '_blank')
+    return
+  }
+
   previewResource.value = resource
   previewContent.value = buildPreviewContent(resource)
   previewVisible.value = true
@@ -486,21 +503,127 @@ const viewResource = (resource) => {
 }
 
 const buildPreviewContent = (resource) => {
-  const body = resource.previewText || '当前为模拟预览内容，后端接口接入后可替换为真实文件内容。'
-  return `<div class="preview-body"><p>${body}</p><p class="preview-hint">后续接入真实 API 后，这里会直接显示 PDF、Word、PPT 或文本内容。</p></div>`
+  const title = resource.title || '未命名资源'
+  const body = resource.previewText || '暂无预览内容'
+  const fileType = resource.fileType || 'text'
+
+  if (fileType === 'pdf') {
+    // Generate a styled document that looks like a PDF page
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      padding: 60px 50px;
+      color: #333;
+      background: #fff;
+      line-height: 1.8;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.8rem; color: #2c5282; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+    p { margin-bottom: 14px; font-size: 1rem; }
+    .meta { color: #a0aec0; font-size: 0.85rem; margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <div class="meta">${escapeHtml(resource.description || '')} | ${resource.duration || 0} 分钟</div>
+  <p>${escapeHtml(body)}</p>
+  <p style="margin-top:30px; color:#a0aec0; font-style:italic">—— 此为模拟预览，接入后端后可展示真实 PDF 文件 ——</p>
+</body>
+</html>`
+  }
+
+  if (fileType === 'doc' || fileType === 'ppt') {
+    // Generate a simple document-like preview
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Georgia, serif;
+      padding: 50px 45px;
+      color: #444;
+      background: #fff;
+      line-height: 1.7;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.6rem; color: #2d3748; margin-bottom: 20px; }
+    p { margin-bottom: 12px; }
+    .badge { display: inline-block; background: #edf2f7; color: #4a5568; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <div class="badge">${fileType.toUpperCase()} 文档</div>
+  <p>${escapeHtml(body)}</p>
+  <p style="margin-top: 30px; color:#cbd5e0; font-size:0.85rem">—— ${fileType === 'doc' ? 'Word' : 'PPT'} 文档模拟预览，后端接入后可替换为 Office Online 查看器或真实文件 ——</p>
+</body>
+</html>`
+  }
+
+  // Text — show as preformatted
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      padding: 30px;
+      color: #2d3748;
+      background: #f7fafc;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>${escapeHtml(body)}</body>
+</html>`
+}
+
+// HTML escape helper
+const escapeHtml = (str) => {
+  if (!str) return ''
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 const downloadResource = (resource) => {
   if (!resource) return
-  const fileName = `${resource.title}.${resource.fileType || 'txt'}`
-  const content = resource.previewText || `资源名称：${resource.title}`
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+
+  const fileName = resource.title
+  const fileType = resource.fileType || 'txt'
+
+  // For text files, download as .txt
+  if (fileType === 'text') {
+    const content = resource.previewText || `资源名称：${resource.title}`
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    triggerDownload(blob, `${fileName}.txt`)
+    return
+  }
+
+  // For PDF/DOC/PPT mock: download HTML preview as .html
+  const htmlContent = buildPreviewContent(resource)
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+  triggerDownload(blob, `${fileName}.html`)
+  ElMessage.success(`已下载：${resource.title}`)
+}
+
+const triggerDownload = (blob, fileName) => {
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
   link.download = fileName
   link.click()
   URL.revokeObjectURL(link.href)
-  ElMessage.success(`开始下载：${resource.title}`)
 }
 
 const handleSizeChange = (val) => {
@@ -731,6 +854,14 @@ const handleCurrentChange = (val) => {
 .preview-hint {
   color: #718096;
   margin-top: 8px;
+}
+
+.preview-frame {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid #e8f0f8;
+  border-radius: 12px;
+  background: #fff;
 }
 
 @media (max-width: 960px) {
