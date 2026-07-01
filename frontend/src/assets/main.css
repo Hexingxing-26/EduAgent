@@ -1,35 +1,80 @@
 @import './base.css';
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  width: 100%;
+  min-height: 100vh;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* Element Plus overrides — soften default component look */
+.el-card {
+  border-radius: var(--radius-lg) !important;
+  border: none !important;
+  box-shadow: var(--shadow-card) !important;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+.el-card:hover {
+  box-shadow: var(--shadow-hover) !important;
+  transform: translateY(-1px);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+.el-card__header {
+  background: linear-gradient(135deg, var(--mac-sky-soft) 0%, var(--mac-lavender-soft) 100%) !important;
+  border-bottom: 1px solid var(--border-soft) !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  padding: 14px 20px !important;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.el-button {
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.2s ease !important;
+}
+
+.el-button--primary {
+  background: #a8d8ea !important;
+  border-color: #a8d8ea !important;
+  color: #fff !important;
+}
+
+.el-button--primary:hover {
+  background: #89c4d9 !important;
+  border-color: #89c4d9 !important;
+}
+
+.el-button--success {
+  background: #b5ead7 !important;
+  border-color: #b5ead7 !important;
+  color: #fff !important;
+}
+
+.el-button--warning {
+  background: #ffe0b2 !important;
+  border-color: #ffe0b2 !important;
+  color: #b07d30 !important;
+}
+
+.el-button--danger {
+  background: #fcbad3 !important;
+  border-color: #fcbad3 !important;
+  color: #fff !important;
+}
+
+.el-progress-bar__outer {
+  border-radius: 10px !important;
+  background: #eef4f8 !important;
+}
+
+.el-tag {
+  border-radius: 8px !important;
+}
+
+.el-input__wrapper {
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 1px 4px rgba(168, 216, 234, 0.1) !important;
+}
+
+.el-menu {
+  border-right: none !important;
 }

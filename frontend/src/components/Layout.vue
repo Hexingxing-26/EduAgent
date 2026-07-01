@@ -197,7 +197,7 @@ router.afterEach(() => {
 }
 
 .sidebar {
-  background-color: #1a365d;
+  background-color: var(--bg-sidebar);
   transition: width 0.3s ease;
   height: 100vh;
   overflow-x: hidden;
@@ -208,31 +208,47 @@ router.afterEach(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #2c5282;
+  background: linear-gradient(135deg, #a8d8ea 0%, #b5ead7 100%);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .logo-container:hover {
-  background-color: #3182ce;
+  opacity: 0.9;
 }
 
 .logo-text {
-  color: white;
+  color: var(--text-primary);
   font-size: 1.2rem;
   font-weight: bold;
 }
 
 .nav-menu {
-  border-right: none;
+  border-right: none !important;
+}
+/* Override Element Plus menu defaults */
+.nav-menu :deep(.el-menu-item) {
+  color: var(--text-secondary) !important;
+  border-radius: 8px;
+  margin: 4px 8px;
+  transition: all 0.2s ease;
+}
+.nav-menu :deep(.el-menu-item:hover) {
+  background: rgba(168, 216, 234, 0.15) !important;
+  color: var(--text-primary) !important;
+}
+.nav-menu :deep(.el-menu-item.is-active) {
+  background: rgba(168, 216, 234, 0.22) !important;
+  color: #5aa8c4 !important;
+  font-weight: 600;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 16px rgba(168, 216, 234, 0.1);
   padding: 0 20px;
   height: 60px;
 }
@@ -246,7 +262,7 @@ router.afterEach(() => {
 .page-title {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #1a365d;
+  color: var(--text-primary);
 }
 
 .user-info {
@@ -257,19 +273,19 @@ router.afterEach(() => {
 
 .username {
   margin-left: 8px;
-  color: #4a5568;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .main-content {
   padding: 20px;
-  background-color: #f7fafc;
+  background-color: var(--bg-page);
   min-height: calc(100vh - 120px);
 }
 
 .footer {
-  background-color: white;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 -2px 16px rgba(168, 216, 234, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
