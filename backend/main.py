@@ -2,6 +2,7 @@ import json
 
 from api.portrait_router import router as portrait_router
 from api.conversation_router import router as conv_router
+from api.v1.chat_stream_router import router as chat_stream_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -37,6 +38,7 @@ app.include_router(user.router)
 app.include_router(conv_router)
 # 注册用户画像模块接口
 app.include_router(portrait_router)
+app.include_router(chat_stream_router)
 
 @app.get("/")
 def root():
