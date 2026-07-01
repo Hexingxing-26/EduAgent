@@ -3,7 +3,7 @@ import axios from 'axios'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const LOGIN_PATH = import.meta.env.VITE_LOGIN_PATH || '/user/login'
 const USER_INFO_PATH = import.meta.env.VITE_USER_INFO_PATH || '/user/info'
-const USE_MOCK_LOGIN = import.meta.env.VITE_USE_MOCK_LOGIN !== 'false'
+const USE_MOCK_LOGIN = import.meta.env.VITE_USE_MOCK_LOGIN === 'true'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -30,7 +30,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // 如果后端返回的 code !== 0，说明业务失败
-    if (response.data.code !== undefined && response.data.code !== 0) {
+    if (response.data && response.data.code !== undefined && response.data.code !== 0) {
       console.error('业务错误:', response.data.msg)
       return Promise.reject(new Error(response.data.msg || '请求失败'))
     }
@@ -47,7 +47,8 @@ api.interceptors.response.use(
 
 // ====== 以下是实际调用的接口 ======
 
-// 1. 登录接口：默认请求后端 /auth/login
+// 1. 登录接口：默认请求后端 /user/login
+// 后端返回: { access_token, token_type: "bearer" }
 export const login = (username, password) => {
   if (USE_MOCK_LOGIN) {
     console.log('[单机模式] 登录账号:', username, '密码:', password)
@@ -62,15 +63,20 @@ export const login = (username, password) => {
     })
   }
 
-  return api.post(LOGIN_PATH, null, {
-    params: {
-      username,
-      password,
+  // 后端使用 application/x-www-form-urlencoded（OAuth2 Password Flow）
+  // 通过 URLSearchParams 发送 username / password
+  const formBody = new URLSearchParams()
+  formBody.append('username', username)
+  formBody.append('password', password)
+
+  return api.post(LOGIN_PATH, formBody, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
   })
 }
 
-// 2. 获取当前用户信息：默认请求后端 /auth/me
+// 2. 获取当前用户信息：默认请求后端 /user/info
 export const getUserInfo = () => {
   if (USE_MOCK_LOGIN) {
     console.log('[单机模式] 获取用户信息')
@@ -92,20 +98,79 @@ export const getUserInfo = () => {
   return api.get(USER_INFO_PATH)
 }
 
+// 3. 获取当前用户的学习画像：GET /portrait/me
+export const getLearningProfile = () => {
+  return api.get('/portrait/me')
+}
+
+// 4. 更新学习画像：POST /portrait/update
+export const updateLearningProfile = (profile) => {
+  return api.post('/portrait/update', profile)
+}
+
+// 5. AI 对话（SSE 流式）：POST /api/v1/chat/stream
+// EventSource 不支持 POST，所以用 fetch + ReadableStream 手写解析
+// 入参:
+//   message    - 用户消息
+//   sessionId  - 会话ID（可空，空时由前端生成）
+//   onChunk    - 每段 chunk 到达时的回调 (data) => {}
+//   onDone     - 流结束回调 () => {}
+//   onError    - 错误回调 (err) => {}
+export async function chatStream(message, sessionId, onChunk, onDone, onError) {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_BASE_URL}/api/v1/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      body: JSON.stringify({
+        message,
+        session_id: sessionId || Date.now().toString(),
+      }),
+    })
+
+    if (!response.ok) {
+      const err = new Error('HTTP ' + response.status)
+      if (onError) onError(err)
+      return
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        if (onDone) onDone()
+        break
+      }
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (onChunk) onChunk(data)
+          } catch (e) {
+            // skip malformed SSE
+          }
+        }
+      }
+    }
+  } catch (err) {
+    if (onError) onError(err)
+    else console.error('chatStream error:', err)
+  }
+}
+
 // ====== 以下接口暂时保留，等C的其他模块文件出来后再改 ======
 // （D的AI接口、资源接口等，目前路径不确定，先留着占位）
 
-// 获取学习画像
-export const getLearningProfile = (userId) => {
-  return api.get(`/profiles/${userId}`)
-}
-
-// 更新学习画像
-export const updateLearningProfile = (userId, profile) => {
-  return api.put(`/profiles/${userId}`, profile)
-}
-
-// 发送AI对话消息
+// 发送AI对话消息（非流式，保留作为回退）
 export const sendAIChatMessage = (message, context = {}) => {
   return api.post('/ai/chat', { message, context })
 }

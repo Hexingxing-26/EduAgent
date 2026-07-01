@@ -77,6 +77,7 @@ import { reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
+import { getLearningProfile, updateLearningProfile } from '@/api/api'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -122,15 +123,44 @@ const syncProfileForm = () => {
   profileForm.bio = userInfo.value.bio || ''
 }
 
-const saveUserInfo = () => {
-  userStore.setUserInfo({
+const saveUserInfo = async () => {
+  // 1) 本地先更新 UI（乐观更新）
+  const updated = {
     ...(userStore.userInfo || defaultUserInfo),
     username: profileForm.username || '用户',
     email: profileForm.email,
     phone: profileForm.phone,
     bio: profileForm.bio,
-  })
-  ElMessage.success('个人资料已保存')
+  }
+  userStore.setUserInfo(updated)
+
+  // 2) 调用真实接口把学习画像写回后端
+  //    个人资料（username/email/phone/bio）目前后端 /portrait/update
+  //    接受一组画像字段，把可编辑资料一并回传
+  try {
+    const profileToSave = {
+      ...(userStore.learningProfile || {}),
+      username: updated.username,
+      email: updated.email,
+      phone: updated.phone,
+      bio: updated.bio,
+    }
+    const res = await updateLearningProfile(profileToSave)
+    // 后端返回的画像写回 store
+    const payload = res?.data || {}
+    const portrait =
+      payload.data?.portrait ||
+      payload.portrait ||
+      payload.data ||
+      payload
+    if (portrait && typeof portrait === 'object') {
+      userStore.setLearningProfile(portrait)
+    }
+    ElMessage.success('个人资料已保存')
+  } catch (err) {
+    console.error('保存个人资料失败：', err)
+    ElMessage.error(err?.message || '保存个人资料失败，请稍后重试')
+  }
 }
 
 const handleLogout = () => {
@@ -143,8 +173,24 @@ const resetUserInfo = () => {
   syncProfileForm()
 }
 
-onMounted(() => {
+onMounted(async () => {
   syncProfileForm()
+  // 进入页面时拉一次真实画像（GET /portrait/me）
+  try {
+    const res = await getLearningProfile()
+    const payload = res?.data || {}
+    const portrait =
+      payload.data?.portrait ||
+      payload.portrait ||
+      payload.data ||
+      payload
+    if (portrait && typeof portrait === 'object') {
+      userStore.setLearningProfile(portrait)
+    }
+  } catch (err) {
+    // 拉取失败不阻塞页面（store 里有默认值）
+    console.warn('拉取学习画像失败：', err?.message || err)
+  }
 })
 
 watch(

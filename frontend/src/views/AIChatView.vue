@@ -67,12 +67,15 @@
 import { ref, computed, nextTick } from 'vue'
 import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
+import { chatStream } from '@/api/api'
 
 const userStore = useUserStore()
 const inputMessage = ref('')
 const isLoading = ref(false)
 const messagesContainer = ref(null)
 const inputRef = ref(null)
+// 单个 SSE 会话 ID，跨多次发送复用，便于后端做多轮上下文
+const sessionId = ref(Date.now().toString())
 
 const suggestions = [
   '如何构建我的学习画像？',
@@ -121,30 +124,63 @@ const sendMessage = async () => {
   inputMessage.value = ''
   isLoading.value = true
 
+  // 先插入一个空的 AI 消息占位，stream 时持续 append 内容
+  const aiMessage = {
+    role: 'ai',
+    content: '',
+    timestamp: new Date().toISOString(),
+  }
+  userStore.addChatMessage(aiMessage)
+  const aiIndex = userStore.chatHistory.length - 1
+
   nextTick(() => {
     scrollToBottom()
   })
 
-  try {
-    // 模拟AI回复（实际项目中应调用API）
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // 模拟AI回复内容
-    const aiResponse = {
-      role: 'ai',
-      content: `关于"${message}"，我为您提供以下分析：<br><br>1. **概念解释**：${message}是学习过程中的重要概念<br>2. **实践建议**：建议您通过实际操作加深理解<br>3. **资源推荐**：可以参考相关的学习资料<br><br>希望这些信息对您有帮助！如果您有更多问题，请继续提问。`,
-      timestamp: new Date().toISOString(),
-    }
-
-    userStore.addChatMessage(aiResponse)
-  } catch (error) {
-    ElMessage.error('发送消息失败')
-  } finally {
-    isLoading.value = false
-    nextTick(() => {
-      scrollToBottom()
-    })
-  }
+  // 用 chatStream 走真实 SSE，onChunk 时追加到刚插入的 AI 消息
+  chatStream(
+    message,
+    sessionId.value,
+    (chunk) => {
+      // 兼容多种后端字段：content / text / delta / message
+      const piece =
+        chunk.content ??
+        chunk.text ??
+        chunk.delta ??
+        chunk.message ??
+        (typeof chunk === 'string' ? chunk : '')
+      if (!piece) return
+      const current = userStore.chatHistory[aiIndex]
+      if (current) {
+        current.content = (current.content || '') + piece
+        // 触发 store 内的 chatHistory 响应式更新（push 后已生效，但原地修改需重写）
+        userStore.chatHistory.splice(aiIndex, 1, { ...current })
+        nextTick(() => {
+          scrollToBottom()
+        })
+      }
+    },
+    () => {
+      // onDone
+      isLoading.value = false
+      nextTick(() => {
+        scrollToBottom()
+      })
+    },
+    (err) => {
+      // onError
+      console.error('chatStream error:', err)
+      const current = userStore.chatHistory[aiIndex]
+      if (current) {
+        current.content =
+          (current.content || '') +
+          '\n\n[错误] AI 回复失败：' + (err?.message || '未知错误')
+        userStore.chatHistory.splice(aiIndex, 1, { ...current })
+      }
+      ElMessage.error('AI 回复失败，请稍后重试')
+      isLoading.value = false
+    },
+  )
 }
 
 // 处理回车键

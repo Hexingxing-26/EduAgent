@@ -115,9 +115,10 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
+import { getLearningProfile, updateLearningProfile } from '@/api/api'
 
 const userStore = useUserStore()
 const learningProfile = computed(() => userStore.currentProfile)
@@ -135,14 +136,37 @@ const knowledgeColor = computed(() => {
   return '#f56c6c'
 })
 
-const updateProfile = () => {
+const updateProfile = async () => {
+  // 1) 乐观更新本地 store
   userStore.setLearningProfile({
     ...learningProfile.value,
     cognitiveStyle: editForm.cognitiveStyle,
     learningGoals: editForm.learningGoals,
     preferredLearningStyle: editForm.preferredLearningStyle,
   })
-  ElMessage.success('学习画像更新成功！')
+
+  // 2) 调用真实接口（POST /portrait/update）
+  try {
+    const res = await updateLearningProfile({
+      ...learningProfile.value,
+      cognitiveStyle: editForm.cognitiveStyle,
+      learningGoals: editForm.learningGoals,
+      preferredLearningStyle: editForm.preferredLearningStyle,
+    })
+    const payload = res?.data || {}
+    const portrait =
+      payload.data?.portrait ||
+      payload.portrait ||
+      payload.data ||
+      payload
+    if (portrait && typeof portrait === 'object') {
+      userStore.setLearningProfile(portrait)
+    }
+    ElMessage.success('学习画像更新成功！')
+  } catch (err) {
+    console.error('更新学习画像失败：', err)
+    ElMessage.error(err?.message || '更新学习画像失败，请稍后重试')
+  }
 }
 
 const resetForm = () => {
@@ -150,6 +174,30 @@ const resetForm = () => {
   editForm.learningGoals = learningProfile.value.learningGoals
   editForm.preferredLearningStyle = learningProfile.value.preferredLearningStyle
 }
+
+onMounted(async () => {
+  // 进入页面时拉一次真实画像（GET /portrait/me）
+  try {
+    const res = await getLearningProfile()
+    const payload = res?.data || {}
+    const portrait =
+      payload.data?.portrait ||
+      payload.portrait ||
+      payload.data ||
+      payload
+    if (portrait && typeof portrait === 'object') {
+      userStore.setLearningProfile(portrait)
+      // 同步回填编辑表单
+      editForm.cognitiveStyle = portrait.cognitiveStyle ?? editForm.cognitiveStyle
+      editForm.learningGoals = portrait.learningGoals ?? editForm.learningGoals
+      editForm.preferredLearningStyle =
+        portrait.preferredLearningStyle ?? editForm.preferredLearningStyle
+    }
+  } catch (err) {
+    // 拉取失败不阻塞页面
+    console.warn('拉取学习画像失败：', err?.message || err)
+  }
+})
 </script>
 
 <style scoped>
