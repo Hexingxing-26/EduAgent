@@ -21,7 +21,7 @@ def get_user_profile(db: Session, user_id: int):
 def update_user_profile(db: Session, user_id: int, portrait_data: dict):
     profile = get_user_profile(db, user_id)
     if not profile:
-        profile = Students(id=user_id)
+        profile = Students(id=user_id, name=f"用户{user_id}")
         db.add(profile)
 
     for src_key, model_field in FIELD_MAP.items():
