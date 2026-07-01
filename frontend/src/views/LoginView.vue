@@ -114,7 +114,7 @@ const handleLogin = async () => {
 }
 
 const handleRegister = () => {
-  ElMessage.info('注册功能开发中，请联系管理员')
+  router.push('/register')
 }
 </script>
 
