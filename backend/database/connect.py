@@ -1,0 +1,46 @@
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# 加载根目录.env配置文件
+load_dotenv()
+
+# 读取数据库配置参数
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+
+# 拼接数据库连接字符串
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# 创建数据库引擎
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True
+)
+
+# 创建数据库会话工厂
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# 所有数据表模型的基类
+Base = declarative_base()
+
+# FastAPI依赖函数，获取数据库会话
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# 测试数据库连通性
+if __name__ == "__main__":
+    try:
+        db_conn = next(get_db())
+        print("✅ 数据库连接正常，第七步完成")
+    except Exception as err:
+        print(f"❌ 连接失败，错误信息：{err}")
