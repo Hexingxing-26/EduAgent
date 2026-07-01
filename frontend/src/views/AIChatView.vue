@@ -86,6 +86,7 @@ const suggestions = [
 // 渲染内容（支持Markdown）
 const renderContent = (message) => {
   let content = message.content
+  console.log('[AIChatView] renderContent called, content length:', content?.length || 0)
   // 简单的Markdown渲染
   content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
   content = content.replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -140,6 +141,7 @@ const sendMessage = async () => {
     message,
     sessionId.value,
     (chunk) => {
+      console.log('[AIChatView] onChunk called:', JSON.stringify(chunk).slice(0, 100))
       if (chunk.type === 'error') {
         ElMessage.error(chunk.msg || 'AI 服务暂时不可用，请稍后重试')
         return
@@ -157,12 +159,14 @@ const sendMessage = async () => {
         current.content = (current.content || '') + piece
         // 触发 store 内的 chatHistory 响应式更新（push 后已生效，但原地修改需重写）
         userStore.chatHistory.splice(aiIndex, 1, { ...current })
+        console.log('[AIChatView] content updated, length:', current.content.length)
         nextTick(() => {
           scrollToBottom()
         })
       }
     },
     () => {
+      console.log('[AIChatView] onDone - stream ended')
       // onDone
       isLoading.value = false
       nextTick(() => {
