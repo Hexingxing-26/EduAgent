@@ -7,9 +7,7 @@
 
     <div class="chat-messages" ref="messagesContainer">
       <div v-if="chatHistory.length === 0" class="empty-chat">
-        <el-empty description="开始与AI学习助手对话吧！">
-          <el-button type="primary" @click="sendInitialMessage">开始对话</el-button>
-        </el-empty>
+        <el-empty description="开始与AI学习助手对话吧！" :image-size="120" />
       </div>
 
       <div
